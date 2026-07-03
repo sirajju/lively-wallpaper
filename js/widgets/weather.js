@@ -43,29 +43,55 @@ export function initWeather() {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  function locate() {
+  /**
+   * Request the browser location exactly once. In Lively's WebView the
+   * permission is not persisted, so repeated getCurrentPosition calls would
+   * re-prompt the user — we avoid that by caching coordinates and never
+   * asking again once we have them.
+   */
+  function locateOnce() {
     if (!navigator.geolocation) {
+      coords = { lat: 40.71, lon: -74.01, label: 'New York (default)' };
       if (statusEl) statusEl.textContent = 'Location not supported';
-      fetchWeather(40.71, -74.01, 'New York (default)');
+      fetchWeather(coords.lat, coords.lon, coords.label);
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        coords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-        fetchWeather(coords.lat, coords.lon, 'Your location');
+        coords = { lat: pos.coords.latitude, lon: pos.coords.longitude, label: 'Your location' };
+        persistence.set('weatherCoords', coords);
+        fetchWeather(coords.lat, coords.lon, coords.label);
       },
       () => {
+        // Fall back in-memory so we never re-prompt this session.
+        coords = { lat: 51.51, lon: -0.13, label: 'London (default)' };
         if (statusEl) statusEl.textContent = 'Location denied — using default';
-        fetchWeather(51.51, -0.13, 'London (default)');
+        fetchWeather(coords.lat, coords.lon, coords.label);
       },
-      { timeout: 10000 }
+      { timeout: 10000, maximumAge: Infinity }
     );
   }
 
+  function refresh() {
+    if (coords) fetchWeather(coords.lat, coords.lon, coords.label || 'Your location');
+    else locateOnce();
+  }
+
   persistence.subscribe((key) => {
-    if (key === 'weatherUnits' && coords) fetchWeather(coords.lat, coords.lon, 'Your location');
+    if ((key === 'weatherUnits' || key === '*') && coords) {
+      fetchWeather(coords.lat, coords.lon, coords.label || 'Your location');
+    }
   });
 
-  locate();
-  setInterval(locate, 30 * 60 * 1000);
+  // Reuse coordinates saved in a previous session — no prompt needed.
+  const saved = persistence.get('weatherCoords', null);
+  if (saved && typeof saved.lat === 'number' && typeof saved.lon === 'number') {
+    coords = saved;
+    fetchWeather(coords.lat, coords.lon, coords.label || 'Your location');
+  } else {
+    locateOnce();
+  }
+
+  // Periodic refresh reuses cached coords — never re-requests permission.
+  setInterval(refresh, 30 * 60 * 1000);
 }
