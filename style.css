@@ -1089,21 +1089,7 @@ input:focus, select:focus {
 .widget-toggles {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.widget-card {
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.28);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  padding: 8px;
-}
-
-.widget-row-header {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 8px;
+  gap: 5px;
 }
 
 .widget-row-controls {
@@ -1117,10 +1103,64 @@ input:focus, select:focus {
   background: rgba(255, 255, 255, 0.55);
 }
 
-.widget-settings-panel {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+/* Floating per-widget settings popover — keeps the settings modal static
+   so nothing needs to scroll (Lively desktop can't scroll). */
+.widget-popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.widget-popover-backdrop.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.widget-popover {
+  width: min(420px, 92vw);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.32);
+  transform: scale(0.96);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.widget-popover-backdrop.is-open .widget-popover {
+  transform: scale(1);
+}
+
+.widget-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.widget-popover-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.widget-popover-body {
+  padding: 16px 18px 18px;
+  overflow-y: auto;
 }
 
 .widget-setting-field {

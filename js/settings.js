@@ -32,9 +32,6 @@ const WIDGETS = [
   'worldclock', 'events', 'radar', 'rss', 'motivation',
 ];
 
-/** @type {Set<string>} */
-const expandedWidgets = new Set();
-
 export function initSettings() {
   const panel = document.getElementById('settings-panel');
   const toggle = document.getElementById('settings-toggle');
@@ -73,8 +70,11 @@ export function initSettings() {
 
   persistence.subscribe((key) => {
     applySettings();
-    if (key === 'widgetSpans' || key === 'hiddenWidgets' || key === '*' || WIDGET_SETTING_KEYS.has(key)) {
+    if (key === 'widgetSpans' || key === 'hiddenWidgets' || key === '*') {
       buildWidgetCards(panel);
+    }
+    if (key === '*' || WIDGET_SETTING_KEYS.has(key)) {
+      refreshOpenWidgetPopover();
     }
   });
 }
@@ -220,11 +220,8 @@ function buildWidgetCards(panel) {
   container.innerHTML = '';
 
   WIDGETS.forEach((id) => {
-    const card = document.createElement('div');
-    card.className = 'widget-card';
-
-    const header = document.createElement('div');
-    header.className = 'widget-row-header';
+    const row = document.createElement('div');
+    row.className = 'widget-row';
 
     const label = document.createElement('label');
     label.className = 'widget-toggle';
@@ -262,23 +259,11 @@ function buildWidgetCards(panel) {
       settingsBtn.setAttribute('aria-label', `Settings for ${id}`);
       settingsBtn.title = 'Widget settings';
       settingsBtn.textContent = '⚙';
-      if (expandedWidgets.has(id)) settingsBtn.classList.add('is-open');
       controls.appendChild(settingsBtn);
     }
 
-    header.append(label, controls);
-    card.appendChild(header);
-
-    if (hasWidgetSettings(id)) {
-      const settingsPanel = document.createElement('div');
-      settingsPanel.className = 'widget-settings-panel';
-      settingsPanel.setAttribute('data-widget-panel', id);
-      if (!expandedWidgets.has(id)) settingsPanel.hidden = true;
-      renderWidgetSettings(id, settingsPanel);
-      card.appendChild(settingsPanel);
-    }
-
-    container.appendChild(card);
+    row.append(label, controls);
+    container.appendChild(row);
   });
 
   container.querySelectorAll('[data-widget-toggle]').forEach((input) => {
@@ -298,19 +283,65 @@ function buildWidgetCards(panel) {
   container.querySelectorAll('[data-widget-settings]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const widgetId = btn.getAttribute('data-widget-settings');
-      if (!widgetId) return;
-      const panelEl = container.querySelector(`[data-widget-panel="${widgetId}"]`);
-      if (!panelEl) return;
-
-      const open = panelEl.hidden;
-      panelEl.hidden = !open;
-      btn.classList.toggle('is-open', open);
-      if (open) expandedWidgets.add(widgetId);
-      else expandedWidgets.delete(widgetId);
-
-      if (open) renderWidgetSettings(widgetId, panelEl);
+      if (widgetId) openWidgetPopover(widgetId);
     });
   });
+}
+
+/** Lazily create the floating per-widget settings popover. */
+function ensureWidgetPopover() {
+  let backdrop = document.getElementById('widget-popover-backdrop');
+  if (backdrop) return backdrop;
+
+  backdrop = document.createElement('div');
+  backdrop.id = 'widget-popover-backdrop';
+  backdrop.className = 'widget-popover-backdrop';
+  backdrop.innerHTML = `
+    <div class="widget-popover" role="dialog" aria-modal="true">
+      <header class="widget-popover-header">
+        <h3 class="widget-popover-title"></h3>
+        <button class="icon-btn widget-popover-close" aria-label="Close" title="Close">×</button>
+      </header>
+      <div class="widget-popover-body"></div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  const close = () => closeWidgetPopover();
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) close();
+  });
+  backdrop.querySelector('.widget-popover-close')?.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+  });
+
+  return backdrop;
+}
+
+function openWidgetPopover(id) {
+  const backdrop = ensureWidgetPopover();
+  const title = backdrop.querySelector('.widget-popover-title');
+  const body = backdrop.querySelector('.widget-popover-body');
+  if (title) title.textContent = id.replace(/-/g, ' ');
+  if (body) renderWidgetSettings(id, /** @type {HTMLElement} */ (body));
+  backdrop.setAttribute('data-widget', id);
+  backdrop.classList.add('is-open');
+}
+
+function closeWidgetPopover() {
+  const backdrop = document.getElementById('widget-popover-backdrop');
+  backdrop?.classList.remove('is-open');
+  backdrop?.removeAttribute('data-widget');
+}
+
+/** Re-render the popover if the open widget's data changed. */
+function refreshOpenWidgetPopover() {
+  const backdrop = document.getElementById('widget-popover-backdrop');
+  if (!backdrop || !backdrop.classList.contains('is-open')) return;
+  const id = backdrop.getAttribute('data-widget');
+  const body = backdrop.querySelector('.widget-popover-body');
+  if (id && body) renderWidgetSettings(id, /** @type {HTMLElement} */ (body));
 }
 
 export default { initSettings };
