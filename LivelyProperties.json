@@ -1,0 +1,73 @@
+{
+  "accentColor": {
+    "text": "Accent Color",
+    "type": "color",
+    "value": "#8B5CF6",
+    "help": "Primary accent color for widgets"
+  },
+  "backgroundMode": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Background Mode",
+    "items": [
+      "Aurora",
+      "Mountains",
+      "Space",
+      "Ocean",
+      "Cyberpunk",
+      "Minimal",
+      "Sunset",
+      "Northern Lights"
+    ]
+  },
+  "glassOpacity": {
+    "max": 100,
+    "min": 10,
+    "step": 1,
+    "text": "Glass Opacity",
+    "type": "slider",
+    "value": 72
+  },
+  "blurAmount": {
+    "max": 40,
+    "min": 4,
+    "step": 1,
+    "text": "Blur Amount",
+    "type": "slider",
+    "value": 20
+  },
+  "animationSpeed": {
+    "max": 200,
+    "min": 25,
+    "step": 5,
+    "text": "Animation Speed",
+    "type": "slider",
+    "value": 100
+  },
+  "focusMode": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Focus Mode"
+  },
+  "githubUsername": {
+    "text": "GitHub Username",
+    "type": "textbox",
+    "value": ""
+  },
+  "weatherUnits": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Temperature Units",
+    "items": ["Celsius", "Fahrenheit"]
+  },
+  "timeFormat24": {
+    "type": "checkbox",
+    "value": false,
+    "text": "24-Hour Time"
+  },
+  "savedState": {
+    "text": "Saved State (JSON)",
+    "type": "textbox",
+    "value": ""
+  }
+}
