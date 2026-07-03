@@ -1,12 +1,17 @@
 {
-  "AppName": "Aurora Desk",
-  "Title": "Aurora Desk — Interactive Wallpaper",
-  "Desc": "Premium glassmorphism productivity wallpaper with clocks, weather, calendar, pomodoro, and more.",
+  "AppVersion": "1.0.0.0",
+  "Title": "Aurora Desk",
+  "Thumbnail": "assets/thumbnail.png",
+  "Preview": "assets/preview.png",
+  "Desc": "Glassmorphism productivity wallpaper with clocks, weather, tasks, RSS, and dockable widgets.",
   "Author": "Aurora Desk",
+  "License": null,
   "Contact": "",
   "Type": 1,
   "FileName": "index.html",
   "Arguments": "--system-information --system-nowplaying --pause-event true",
+  "IsAbsolutePath": false,
   "IsCustomizable": true,
-  "Preview": "assets/preview.svg"
+  "Tags": ["productivity", "widgets", "clock", "weather"],
+  "Version": 1
 }
