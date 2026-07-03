@@ -47,7 +47,7 @@ const DEFAULT_STATE = {
   notes: [],
   countdowns: [],
   events: [],
-  worldClocks: ['America/New_York', 'Europe/London', 'Asia/Tokyo'],
+  worldClocks: ['Asia/Kolkata', 'Europe/London', 'America/New_York'],
   githubUsername: '',
   weatherCoords: null,
   pomodoroWork: 25,

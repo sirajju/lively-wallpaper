@@ -1,7 +1,10 @@
 import { weatherIcon } from '../utils.js';
 import * as persistence from '../persistence.js';
 
-let coords = null;
+// Default location for everything — Mumbai, India. No geolocation prompt.
+const DEFAULT_COORDS = { lat: 19.076, lon: 72.8777, label: 'Mumbai' };
+
+let coords = DEFAULT_COORDS;
 
 export function initWeather() {
   const el = document.getElementById('weather-widget');
@@ -43,55 +46,21 @@ export function initWeather() {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-  /**
-   * Request the browser location exactly once. In Lively's WebView the
-   * permission is not persisted, so repeated getCurrentPosition calls would
-   * re-prompt the user — we avoid that by caching coordinates and never
-   * asking again once we have them.
-   */
-  function locateOnce() {
-    if (!navigator.geolocation) {
-      coords = { lat: 40.71, lon: -74.01, label: 'New York (default)' };
-      if (statusEl) statusEl.textContent = 'Location not supported';
-      fetchWeather(coords.lat, coords.lon, coords.label);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        coords = { lat: pos.coords.latitude, lon: pos.coords.longitude, label: 'Your location' };
-        persistence.set('weatherCoords', coords);
-        fetchWeather(coords.lat, coords.lon, coords.label);
-      },
-      () => {
-        // Fall back in-memory so we never re-prompt this session.
-        coords = { lat: 51.51, lon: -0.13, label: 'London (default)' };
-        if (statusEl) statusEl.textContent = 'Location denied — using default';
-        fetchWeather(coords.lat, coords.lon, coords.label);
-      },
-      { timeout: 10000, maximumAge: Infinity }
-    );
-  }
-
   function refresh() {
-    if (coords) fetchWeather(coords.lat, coords.lon, coords.label || 'Your location');
-    else locateOnce();
+    fetchWeather(coords.lat, coords.lon, coords.label);
   }
 
   persistence.subscribe((key) => {
-    if ((key === 'weatherUnits' || key === '*') && coords) {
-      fetchWeather(coords.lat, coords.lon, coords.label || 'Your location');
-    }
+    if (key === 'weatherUnits' || key === '*') refresh();
   });
 
-  // Reuse coordinates saved in a previous session — no prompt needed.
+  // Use a saved location if the user set one, otherwise default to Mumbai.
+  // No geolocation prompt is ever shown.
   const saved = persistence.get('weatherCoords', null);
   if (saved && typeof saved.lat === 'number' && typeof saved.lon === 'number') {
-    coords = saved;
-    fetchWeather(coords.lat, coords.lon, coords.label || 'Your location');
-  } else {
-    locateOnce();
+    coords = { label: 'Mumbai', ...saved };
   }
+  refresh();
 
-  // Periodic refresh reuses cached coords — never re-requests permission.
   setInterval(refresh, 30 * 60 * 1000);
 }

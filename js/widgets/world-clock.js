@@ -28,7 +28,7 @@ export function initWorldClock() {
   }
 
   function getZones() {
-    return /** @type {string[]} */ (persistence.get('worldClocks', ['America/New_York', 'Europe/London', 'Asia/Tokyo']));
+    return /** @type {string[]} */ (persistence.get('worldClocks', ['Asia/Kolkata', 'Europe/London', 'America/New_York']));
   }
 
   function saveZones(zones) {
