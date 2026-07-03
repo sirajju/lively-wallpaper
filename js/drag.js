@@ -16,6 +16,13 @@
 
 import * as persistence from './persistence.js';
 import { clamp } from './utils.js';
+import {
+  getWidgetSpan,
+  syncWidgetSizeAttr,
+  nearestSize,
+  setWidgetSize,
+  SIZE_PRESETS,
+} from './widget-sizes.js';
 
 const INTERACTIVE = 'input, textarea, select, button, a, label, .note-text';
 const GRID_BREAKPOINT = 1100;
@@ -24,46 +31,32 @@ const ROWS = 8;
 const GAP = 14;
 const DRAG_THRESHOLD = 4;
 
-/** Cell span (cols × rows) per widget — all 4 cols wide for a uniform 3-per-row grid. */
-const SPANS = {
-  clock: [4, 2],
-  greeting: [4, 2],
-  weather: [4, 3],
-  calendar: [4, 4],
-  pomodoro: [4, 4],
-  todo: [4, 5],
-  stopwatch: [4, 3],
-  countdown: [4, 3],
-  notes: [4, 4],
-  spotify: [4, 3],
-  github: [4, 5],
-  system: [4, 3],
-  worldclock: [4, 3],
-  events: [4, 4],
-  radar: [4, 3],
-  rss: [4, 2],
-  motivation: [4, 2],
-};
-
-/** Default non-overlapping cells for the widgets shown by default (3 columns). */
+/**
+ * Default non-overlapping cells for the given sizes.
+ * Top band = compact SM widgets (3 wide × 2 tall).
+ * Middle band = MD widgets (4 wide × 3 tall).
+ */
 const DEFAULT_DOCKS = {
+  // Row 0-1: small info widgets across the top
   clock: [0, 0],
-  greeting: [4, 0],
-  weather: [8, 0],
+  greeting: [3, 0],
+  weather: [6, 0],
+  system: [9, 0],
+  // Row 2-4: medium interactive widgets
   calendar: [0, 2],
   pomodoro: [4, 2],
-  todo: [8, 3],
-  rss: [4, 6],
-  motivation: [0, 6],
-  events: [8, 3],
-  notes: [4, 2],
-  countdown: [0, 2],
-  spotify: [8, 3],
-  github: [0, 2],
-  stopwatch: [8, 6],
-  system: [8, 6],
-  worldclock: [4, 6],
-  radar: [8, 6],
+  todo: [8, 2],
+  events: [0, 5],
+  notes: [4, 5],
+  radar: [8, 5],
+  countdown: [9, 0],
+  spotify: [9, 2],
+  // Others (mostly hidden by default) — placed lower, auto-adjusted if needed
+  stopwatch: [0, 5],
+  worldclock: [3, 0],
+  rss: [6, 0],
+  motivation: [0, 7],
+  github: [8, 4],
 };
 
 let active = null;
@@ -73,6 +66,9 @@ let startY = 0;
 let grabLocalX = 0;
 let grabLocalY = 0;
 let topZ = 10;
+
+let resizing = null;
+let resizePreviewSize = null;
 
 let guideLayer = null;
 let highlightEl = null;
@@ -116,8 +112,8 @@ function gridMetrics() {
  */
 function spanOf(el) {
   const id = el.dataset.widget ?? '';
-  const s = SPANS[id] || [3, 3];
-  return [clamp(s[0], 1, COLS), clamp(s[1], 1, ROWS)];
+  const [cols, rows] = getWidgetSpan(id);
+  return [clamp(cols, 1, COLS), clamp(rows, 1, ROWS)];
 }
 
 /**
@@ -157,6 +153,7 @@ function placeInCell(el, col, row, m) {
   el.style.bottom = 'auto';
   el.dataset.col = String(col);
   el.dataset.row = String(row);
+  syncWidgetSizeAttr(el);
 }
 
 /**
@@ -274,12 +271,22 @@ export function initDrag() {
 
   document.querySelectorAll('.widget[data-widget]').forEach((el) => {
     el.addEventListener('mousedown', onMouseDown);
+    if (!el.querySelector('.widget-resize-handle')) {
+      const handle = document.createElement('div');
+      handle.className = 'widget-resize-handle';
+      handle.setAttribute('aria-hidden', 'true');
+      handle.title = 'Drag to resize';
+      handle.addEventListener('mousedown', onResizeDown);
+      el.appendChild(handle);
+    }
   });
 
   applySavedPositions();
 
   persistence.subscribe((key) => {
-    if (key === 'widgetDocks' || key === 'hiddenWidgets' || key === '*') applySavedPositions();
+    if (key === 'widgetDocks' || key === 'widgetSizes' || key === 'hiddenWidgets' || key === '*') {
+      applySavedPositions();
+    }
   });
 
   window.addEventListener('resize', applySavedPositions);
@@ -291,6 +298,7 @@ export function initDrag() {
 function onMouseDown(e) {
   if (e.button !== 0) return;
   if (window.innerWidth <= GRID_BREAKPOINT) return;
+  if (e.target.closest('.widget-resize-handle')) return;
   if (e.target.closest(INTERACTIVE)) return;
 
   const widget = /** @type {HTMLElement} */ (e.currentTarget);
@@ -392,6 +400,93 @@ function onMouseUp() {
   }
 
   active = null;
+}
+
+/* ---- Drag-to-resize ---- */
+
+/**
+ * @param {MouseEvent} e
+ */
+function onResizeDown(e) {
+  if (e.button !== 0) return;
+  if (window.innerWidth <= GRID_BREAKPOINT) return;
+
+  const widget = /** @type {HTMLElement} */ (e.currentTarget).closest('.widget');
+  if (!widget) return;
+
+  e.stopPropagation();
+  e.preventDefault();
+
+  resizing = widget;
+  resizePreviewSize = null;
+  widget.classList.add('is-resizing');
+  widget.style.zIndex = String(++topZ);
+  document.body.classList.add('is-docking');
+
+  window.addEventListener('mousemove', onResizeMove);
+  window.addEventListener('mouseup', onResizeUp);
+}
+
+/**
+ * @param {MouseEvent} e
+ */
+function onResizeMove(e) {
+  if (!resizing) return;
+
+  const m = gridMetrics();
+  const col = Number(resizing.dataset.col) || 0;
+  const row = Number(resizing.dataset.row) || 0;
+  const cellLeft = m.padL + col * (m.colW + GAP);
+  const cellTop = m.padT + row * (m.rowH + GAP);
+
+  const localX = e.clientX - m.rect.left;
+  const localY = e.clientY - m.rect.top;
+
+  // Fractional span from the widget's top-left corner to the pointer.
+  const spanCFloat = (localX - cellLeft + GAP) / (m.colW + GAP);
+  const spanRFloat = (localY - cellTop + GAP) / (m.rowH + GAP);
+
+  const size = nearestSize(spanCFloat, spanRFloat);
+  resizePreviewSize = size;
+
+  let sc = SIZE_PRESETS[size].cols;
+  let sr = SIZE_PRESETS[size].rows;
+  sc = clamp(sc, 1, COLS - col);
+  sr = clamp(sr, 1, ROWS - row);
+
+  const box = cellBox(col, row, sc, sr, m);
+  resizing.style.width = `${box.width}px`;
+  resizing.style.height = `${box.height}px`;
+  resizing.style.maxHeight = 'none';
+
+  const occ = occupiedCells(resizing);
+  const free = isFree(col, row, sc, sr, occ, resizing.dataset.widget);
+  showHighlight(box, m, !free);
+}
+
+function onResizeUp() {
+  if (!resizing) return;
+
+  const widget = resizing;
+  window.removeEventListener('mousemove', onResizeMove);
+  window.removeEventListener('mouseup', onResizeUp);
+
+  widget.classList.remove('is-resizing');
+  hideHighlight();
+  document.body.classList.remove('is-docking');
+
+  const size = resizePreviewSize;
+  const id = widget.dataset.widget;
+  resizing = null;
+  resizePreviewSize = null;
+
+  if (size && id) {
+    // Persisting the size triggers applySavedPositions via the subscription,
+    // which reflows every widget to the new footprint.
+    setWidgetSize(id, size);
+  } else {
+    applySavedPositions();
+  }
 }
 
 /**

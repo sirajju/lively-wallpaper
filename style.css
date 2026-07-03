@@ -150,6 +150,35 @@ body.focus-mode .widget[data-widget="todo"] {
   background: color-mix(in srgb, #ef4444 12%, transparent);
 }
 
+/* Drag-to-resize handle (bottom-right corner) */
+.widget-resize-handle {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 16px;
+  height: 16px;
+  z-index: 7;
+  cursor: nwse-resize;
+  opacity: 0;
+  border-right: 2px solid var(--w-accent, var(--accent));
+  border-bottom: 2px solid var(--w-accent, var(--accent));
+  border-bottom-right-radius: 7px;
+  transition: opacity 0.15s ease;
+}
+
+.widget:hover .widget-resize-handle {
+  opacity: 0.45;
+}
+
+.widget-resize-handle:hover {
+  opacity: 1;
+}
+
+.widget.is-resizing {
+  transition: none;
+  cursor: nwse-resize;
+}
+
 /* Snap-into-place animation on drop */
 .widget.is-snapping {
   transition:
@@ -231,8 +260,14 @@ body.focus-mode .widget[data-widget="todo"] {
   transform: scale(calc(var(--widget-scale) * 0.95));
 }
 
-.widget-lg { min-width: 280px; }
-.widget-sm { min-width: 200px; }
+/* Standard dock sizes — padding scales with preset */
+.widget.size-xs { padding: 12px 14px; }
+.widget.size-xs .widget-header h3 { font-size: 0.68rem; }
+.widget.size-xs .clock-time { font-size: clamp(1.4rem, 2.2vw, 2rem); }
+.widget.size-sm { padding: 14px 16px; }
+.widget.size-md { padding: clamp(16px, 1.5vw, 22px); }
+.widget.size-lg { padding: clamp(18px, 1.6vw, 24px); }
+.widget.size-xl { padding: clamp(20px, 1.8vw, 28px); }
 
 .widget-header {
   display: flex;
@@ -962,9 +997,16 @@ input:focus, select:focus {
 }
 
 .widget-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.widget-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px 12px;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
 }
 
 .widget-toggles .widget-toggle {
@@ -976,6 +1018,16 @@ input:focus, select:focus {
   font-size: 0.8rem;
   cursor: pointer;
   text-transform: capitalize;
+}
+
+.widget-size-select {
+  font-size: 0.72rem;
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--text-primary);
+  min-width: 5.5rem;
 }
 
 .widget-toggle input { accent-color: var(--accent); }

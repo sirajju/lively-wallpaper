@@ -8,6 +8,7 @@ import { getSoundOptions } from './ambient.js';
 import { setMode } from './background.js';
 import { toggleWidgetVisibility } from './focus-mode.js';
 import { resetPositions } from './drag.js';
+import { getSizeOptions, getWidgetSize, setWidgetSize } from './widget-sizes.js';
 
 const BG_MODES = [
   'aurora',
@@ -62,7 +63,12 @@ export function initSettings() {
   applySettings();
   buildWidgetToggles(panel);
 
-  persistence.subscribe(() => applySettings());
+  persistence.subscribe((key) => {
+    applySettings();
+    if (key === 'widgetSizes' || key === 'hiddenWidgets' || key === '*') {
+      buildWidgetToggles(panel);
+    }
+  });
 }
 
 function bindControls(panel) {
@@ -202,22 +208,48 @@ function buildWidgetToggles(panel) {
   if (!container) return;
 
   const hidden = new Set(persistence.get('hiddenWidgets', []));
+  const sizeOptions = getSizeOptions();
   container.innerHTML = '';
 
   WIDGETS.forEach((id) => {
+    const row = document.createElement('div');
+    row.className = 'widget-row';
+
     const label = document.createElement('label');
     label.className = 'widget-toggle';
     label.innerHTML = `
       <input type="checkbox" data-widget-toggle="${id}" ${hidden.has(id) ? '' : 'checked'}>
       <span>${id.replace(/-/g, ' ')}</span>
     `;
-    container.appendChild(label);
+
+    const sizeSelect = document.createElement('select');
+    sizeSelect.className = 'widget-size-select';
+    sizeSelect.setAttribute('data-widget-size', id);
+    sizeSelect.setAttribute('aria-label', `Size for ${id}`);
+    const current = getWidgetSize(id);
+    sizeOptions.forEach((opt) => {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.label;
+      if (opt.value === current) option.selected = true;
+      sizeSelect.appendChild(option);
+    });
+
+    row.append(label, sizeSelect);
+    container.appendChild(row);
   });
 
   container.querySelectorAll('[data-widget-toggle]').forEach((input) => {
     input.addEventListener('change', () => {
       const id = input.getAttribute('data-widget-toggle');
       toggleWidgetVisibility(id, !input.checked);
+    });
+  });
+
+  container.querySelectorAll('[data-widget-size]').forEach((select) => {
+    select.addEventListener('change', () => {
+      const id = select.getAttribute('data-widget-size');
+      if (id) setWidgetSize(id, select.value);
     });
   });
 }

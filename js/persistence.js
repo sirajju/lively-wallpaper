@@ -36,6 +36,7 @@ const DEFAULT_STATE = {
   ],
   widgetPositions: {},
   widgetDocks: {},
+  widgetSizes: {},
   todos: [],
   notes: [],
   countdowns: [],

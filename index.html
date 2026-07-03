@@ -14,20 +14,20 @@
 
   <div class="desk" role="main">
     <!-- Clock — top left anchor -->
-    <article class="widget widget-lg pos-clock" id="clock-widget" data-widget="clock" data-dock-cols="3" data-dock-rows="2">
+    <article class="widget pos-clock" id="clock-widget" data-widget="clock">
       <div class="clock-time" aria-live="polite">00:00:00</div>
       <div class="clock-day">Monday</div>
       <div class="clock-date">January 1, 2026</div>
     </article>
 
     <!-- Greeting -->
-    <article class="widget pos-greeting" id="greeting-widget" data-widget="greeting" data-dock-cols="4" data-dock-rows="1">
+    <article class="widget pos-greeting" id="greeting-widget" data-widget="greeting">
       <h2 class="greeting-text">Good Morning</h2>
       <p class="greeting-quote">"Build things that matter."</p>
     </article>
 
     <!-- Weather -->
-    <article class="widget pos-weather" id="weather-widget" data-widget="weather" data-dock-cols="3" data-dock-rows="2">
+    <article class="widget pos-weather" id="weather-widget" data-widget="weather">
       <header class="widget-header">
         <h3>Weather</h3>
         <span class="weather-status widget-muted"></span>
@@ -46,7 +46,7 @@
     </article>
 
     <!-- Calendar -->
-    <article class="widget pos-calendar" id="calendar-widget" data-widget="calendar" data-dock-cols="3" data-dock-rows="2">
+    <article class="widget pos-calendar" id="calendar-widget" data-widget="calendar">
       <header class="widget-header">
         <h3 class="cal-month">Month</h3>
       </header>
@@ -55,7 +55,7 @@
     </article>
 
     <!-- Pomodoro -->
-    <article class="widget pos-pomodoro" id="pomodoro-widget" data-widget="pomodoro" data-dock-cols="3" data-dock-rows="2">
+    <article class="widget pos-pomodoro" id="pomodoro-widget" data-widget="pomodoro">
       <header class="widget-header"><h3>Pomodoro</h3></header>
       <div class="pomo-ring">
         <svg viewBox="0 0 120 120" aria-hidden="true">
@@ -76,7 +76,7 @@
     </article>
 
     <!-- Stopwatch -->
-    <article class="widget widget-sm pos-stopwatch" id="stopwatch-widget" data-widget="stopwatch" data-dock-cols="2" data-dock-rows="2">
+    <article class="widget pos-stopwatch" id="stopwatch-widget" data-widget="stopwatch">
       <header class="widget-header"><h3>Stopwatch</h3></header>
       <div class="sw-time">00:00</div>
       <div class="btn-row">
@@ -88,7 +88,7 @@
     </article>
 
     <!-- Countdown -->
-    <article class="widget pos-countdown" id="countdown-widget" data-widget="countdown" data-dock-cols="3" data-dock-rows="2">
+    <article class="widget pos-countdown" id="countdown-widget" data-widget="countdown">
       <header class="widget-header"><h3>Countdown</h3></header>
       <div class="countdown-form">
         <input class="cd-label" type="text" placeholder="Event name" aria-label="Event name">
@@ -99,7 +99,7 @@
     </article>
 
     <!-- Todo -->
-    <article class="widget pos-todo" id="todo-widget" data-widget="todo" data-dock-cols="3" data-dock-rows="3">
+    <article class="widget pos-todo" id="todo-widget" data-widget="todo">
       <header class="widget-header">
         <h3>Tasks</h3>
         <div class="btn-row compact">
@@ -122,7 +122,7 @@
     </article>
 
     <!-- Notes -->
-    <article class="widget pos-notes" id="notes-widget" data-widget="notes" data-dock-cols="4" data-dock-rows="2">
+    <article class="widget pos-notes" id="notes-widget" data-widget="notes">
       <header class="widget-header">
         <h3>Notes</h3>
         <div class="btn-row compact">
@@ -136,7 +136,7 @@
     </article>
 
     <!-- Spotify -->
-    <article class="widget pos-spotify" id="spotify-widget" data-widget="spotify" data-dock-cols="3" data-dock-rows="2">
+    <article class="widget pos-spotify" id="spotify-widget" data-widget="spotify">
       <header class="widget-header">
         <h3>Now Playing</h3>
         <span class="spotify-status widget-muted"></span>
@@ -155,7 +155,7 @@
     </article>
 
     <!-- GitHub -->
-    <article class="widget pos-github" id="github-widget" data-widget="github" data-dock-cols="3" data-dock-rows="2">
+    <article class="widget pos-github" id="github-widget" data-widget="github">
       <header class="widget-header">
         <h3>GitHub</h3>
         <span class="gh-status widget-muted"></span>
@@ -170,7 +170,7 @@
     </article>
 
     <!-- System -->
-    <article class="widget widget-sm pos-system" id="system-widget" data-widget="system" data-dock-cols="2" data-dock-rows="2">
+    <article class="widget pos-system" id="system-widget" data-widget="system">
       <header class="widget-header"><h3>System</h3></header>
       <ul class="sys-list">
         <li><span>Battery</span><span data-sys="battery">—</span></li>
@@ -185,7 +185,7 @@
     </article>
 
     <!-- World Clock -->
-    <article class="widget pos-worldclock" id="worldclock-widget" data-widget="worldclock" data-dock-cols="2" data-dock-rows="2">
+    <article class="widget pos-worldclock" id="worldclock-widget" data-widget="worldclock">
       <header class="widget-header"><h3>World Clock</h3></header>
       <div class="wc-list"></div>
       <div class="wc-form">
@@ -195,7 +195,7 @@
     </article>
 
     <!-- Events -->
-    <article class="widget pos-events" id="events-widget" data-widget="events" data-dock-cols="3" data-dock-rows="2">
+    <article class="widget pos-events" id="events-widget" data-widget="events">
       <header class="widget-header"><h3>Agenda</h3></header>
       <div class="events-form">
         <input class="ev-title" type="text" placeholder="Event" aria-label="Event title">
@@ -207,7 +207,7 @@
     </article>
 
     <!-- Weather Radar -->
-    <article class="widget pos-radar" id="radar-widget" data-widget="radar" data-dock-cols="2" data-dock-rows="2">
+    <article class="widget pos-radar" id="radar-widget" data-widget="radar">
       <header class="widget-header">
         <h3>Radar</h3>
         <span class="radar-status widget-muted"></span>
@@ -216,7 +216,7 @@
     </article>
 
     <!-- RSS -->
-    <article class="widget pos-rss" id="rss-widget" data-widget="rss" data-dock-cols="3" data-dock-rows="2">
+    <article class="widget pos-rss" id="rss-widget" data-widget="rss">
       <header class="widget-header">
         <h3>Dev News</h3>
         <span class="rss-source widget-muted"></span>
@@ -226,7 +226,7 @@
     </article>
 
     <!-- Motivation -->
-    <article class="widget pos-motivation" id="motivation-widget" data-widget="motivation" data-dock-cols="3" data-dock-rows="1">
+    <article class="widget pos-motivation" id="motivation-widget" data-widget="motivation">
       <header class="widget-header">
         <h3>Motivation</h3>
         <button class="btn btn-ghost motivation-next">Next</button>
@@ -269,7 +269,8 @@
       <section class="settings-section">
         <h3>Preferences</h3>
         <label class="check-label"><input id="set-time-24" type="checkbox"> 24-hour time</label>
-        <label class="check-label"><input id="set-focus" type="checkbox"> Focus mode</label>
+        <label class="check-
+        label"><input id="set-focus" type="checkbox"> Focus mode</label>
         <label>Temperature
           <select id="set-units">
             <option value="celsius">Celsius</option>
@@ -284,7 +285,7 @@
       </section>
       <section class="settings-section">
         <h3>Widgets</h3>
-        <p class="settings-hint">Drag a widget to dock it — widgets resize to the grid so they interlock like blocks. Toggle visibility below.</p>
+        <p class="settings-hint">Each widget uses a standard size (XS → XL). Drag to dock; pick size per widget below.</p>
         <div class="btn-row reset-row">
           <button class="btn btn-ghost" id="reset-layout">Reset to Default Layout</button>
         </div>
