@@ -1,15 +1,19 @@
 /**
- * Standard widget sizes for the modular dock grid.
+ * Widget sizing for the modular dock grid.
  *
- * Every widget uses one of five presets so blocks interlock cleanly.
- * Sizes map to grid cell spans on the 12×8 desk grid.
+ * Source of truth is `widgetSpans`: an explicit { cols, rows } footprint per
+ * widget on the 12×8 grid. This lets a widget be resized in width only, height
+ * only, or both. Named presets (XS…XL) are shortcuts that set a span.
  */
 
 import * as persistence from './persistence.js';
 
-/** @typedef {'xs'|'sm'|'md'|'lg'|'xl'} WidgetSize */
+/** @typedef {'xs'|'sm'|'md'|'lg'|'xl'} SizeKey */
 
-/** Grid span [cols, rows] per size preset. */
+export const GRID_COLS = 12;
+export const GRID_ROWS = 8;
+
+/** Grid span [cols, rows] per named preset. */
 export const SIZE_PRESETS = {
   xs: { cols: 2, rows: 2, label: 'XS' },
   sm: { cols: 3, rows: 2, label: 'Small' },
@@ -18,7 +22,7 @@ export const SIZE_PRESETS = {
   xl: { cols: 6, rows: 4, label: 'XL' },
 };
 
-/** Default size per widget (content-appropriate). */
+/** Default preset per widget (content-appropriate). */
 export const DEFAULT_WIDGET_SIZES = {
   clock: 'sm',
   greeting: 'sm',
@@ -39,97 +43,100 @@ export const DEFAULT_WIDGET_SIZES = {
   motivation: 'sm',
 };
 
-const SIZE_KEYS = /** @type {WidgetSize[]} */ (Object.keys(SIZE_PRESETS));
+const SIZE_KEYS = /** @type {SizeKey[]} */ (Object.keys(SIZE_PRESETS));
 
 /**
- * @returns {Record<string, WidgetSize>}
+ * @returns {Record<string, {cols:number, rows:number}>}
  */
-export function getWidgetSizes() {
-  return /** @type {Record<string, WidgetSize>} */ (
-    persistence.get('widgetSizes', {})
+export function getWidgetSpans() {
+  return /** @type {Record<string, {cols:number, rows:number}>} */ (
+    persistence.get('widgetSpans', {})
   );
 }
 
 /**
- * @param {string} widgetId
- * @returns {WidgetSize}
- */
-export function getWidgetSize(widgetId) {
-  const saved = getWidgetSizes()[widgetId];
-  if (saved && SIZE_PRESETS[saved]) return saved;
-  return /** @type {WidgetSize} */ (DEFAULT_WIDGET_SIZES[widgetId] || 'md');
-}
-
-/**
+ * Current footprint [cols, rows] for a widget — explicit span or preset default.
  * @param {string} widgetId
  * @returns {[number, number]}
  */
 export function getWidgetSpan(widgetId) {
-  const preset = SIZE_PRESETS[getWidgetSize(widgetId)];
+  const span = getWidgetSpans()[widgetId];
+  if (span && Number.isFinite(span.cols) && Number.isFinite(span.rows)) {
+    return [span.cols, span.rows];
+  }
+  const preset = SIZE_PRESETS[DEFAULT_WIDGET_SIZES[widgetId] || 'md'];
   return [preset.cols, preset.rows];
 }
 
 /**
+ * Persist an explicit footprint (used by drag-resize; allows any W/H).
  * @param {string} widgetId
- * @param {WidgetSize} size
+ * @param {number} cols
+ * @param {number} rows
  */
-export function setWidgetSize(widgetId, size) {
-  if (!SIZE_PRESETS[size]) return;
-  const sizes = { ...getWidgetSizes(), [widgetId]: size };
-  persistence.set('widgetSizes', sizes);
+export function setWidgetSpan(widgetId, cols, rows) {
+  const c = Math.max(1, Math.min(GRID_COLS, Math.round(cols)));
+  const r = Math.max(1, Math.min(GRID_ROWS, Math.round(rows)));
+  const spans = { ...getWidgetSpans(), [widgetId]: { cols: c, rows: r } };
+  persistence.set('widgetSpans', spans);
 }
 
 /**
- * Apply size class + data attribute to a widget element.
+ * Apply a named preset size to a widget.
+ * @param {string} widgetId
+ * @param {SizeKey} sizeKey
+ */
+export function setWidgetSize(widgetId, sizeKey) {
+  const preset = SIZE_PRESETS[sizeKey];
+  if (!preset) return;
+  setWidgetSpan(widgetId, preset.cols, preset.rows);
+}
+
+/**
+ * The preset key matching a widget's current span, or 'custom'.
+ * @param {string} widgetId
+ * @returns {SizeKey|'custom'}
+ */
+export function getCurrentSizeKey(widgetId) {
+  const [cols, rows] = getWidgetSpan(widgetId);
+  for (const key of SIZE_KEYS) {
+    const p = SIZE_PRESETS[key];
+    if (p.cols === cols && p.rows === rows) return key;
+  }
+  return 'custom';
+}
+
+/**
+ * Apply size data attribute + class to a widget element.
  * @param {HTMLElement} el
  */
 export function syncWidgetSizeAttr(el) {
   const id = el.dataset.widget;
   if (!id) return;
-  const size = getWidgetSize(id);
-  el.dataset.size = size;
-  el.classList.remove('size-xs', 'size-sm', 'size-md', 'size-lg', 'size-xl');
-  el.classList.add(`size-${size}`);
+  const key = getCurrentSizeKey(id);
+  el.dataset.size = key;
+  el.classList.remove('size-xs', 'size-sm', 'size-md', 'size-lg', 'size-xl', 'size-custom');
+  el.classList.add(`size-${key}`);
 }
 
 /**
- * Nearest standard size to a (possibly fractional) cell span.
- * @param {number} cols
- * @param {number} rows
- * @returns {WidgetSize}
- */
-export function nearestSize(cols, rows) {
-  let best = /** @type {WidgetSize} */ ('md');
-  let bestDist = Infinity;
-  for (const key of SIZE_KEYS) {
-    const p = SIZE_PRESETS[key];
-    const d = (p.cols - cols) ** 2 + (p.rows - rows) ** 2;
-    if (d < bestDist) {
-      bestDist = d;
-      best = key;
-    }
-  }
-  return best;
-}
-
-/**
- * Options for settings dropdowns.
- * @returns {{value: WidgetSize, label: string}[]}
+ * Options for the settings size dropdown.
+ * @returns {{value: string, label: string}[]}
  */
 export function getSizeOptions() {
-  return SIZE_KEYS.map((key) => ({
-    value: key,
-    label: SIZE_PRESETS[key].label,
-  }));
+  return SIZE_KEYS.map((key) => ({ value: key, label: SIZE_PRESETS[key].label }));
 }
 
 export default {
+  GRID_COLS,
+  GRID_ROWS,
   SIZE_PRESETS,
   DEFAULT_WIDGET_SIZES,
-  getWidgetSize,
+  getWidgetSpans,
   getWidgetSpan,
+  setWidgetSpan,
   setWidgetSize,
+  getCurrentSizeKey,
   syncWidgetSizeAttr,
   getSizeOptions,
-  nearestSize,
 };

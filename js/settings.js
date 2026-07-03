@@ -8,7 +8,7 @@ import { getSoundOptions } from './ambient.js';
 import { setMode } from './background.js';
 import { toggleWidgetVisibility } from './focus-mode.js';
 import { resetPositions } from './drag.js';
-import { getSizeOptions, getWidgetSize, setWidgetSize } from './widget-sizes.js';
+import { getSizeOptions, getCurrentSizeKey, setWidgetSize } from './widget-sizes.js';
 
 const BG_MODES = [
   'aurora',
@@ -65,7 +65,7 @@ export function initSettings() {
 
   persistence.subscribe((key) => {
     applySettings();
-    if (key === 'widgetSizes' || key === 'hiddenWidgets' || key === '*') {
+    if (key === 'widgetSpans' || key === 'hiddenWidgets' || key === '*') {
       buildWidgetToggles(panel);
     }
   });
@@ -226,12 +226,15 @@ function buildWidgetToggles(panel) {
     sizeSelect.className = 'widget-size-select';
     sizeSelect.setAttribute('data-widget-size', id);
     sizeSelect.setAttribute('aria-label', `Size for ${id}`);
-    const current = getWidgetSize(id);
-    sizeOptions.forEach((opt) => {
+    const current = getCurrentSizeKey(id);
+    const opts = [...sizeOptions];
+    if (current === 'custom') opts.push({ value: 'custom', label: 'Custom' });
+    opts.forEach((opt) => {
       const option = document.createElement('option');
       option.value = opt.value;
       option.textContent = opt.label;
       if (opt.value === current) option.selected = true;
+      if (opt.value === 'custom') option.disabled = true;
       sizeSelect.appendChild(option);
     });
 

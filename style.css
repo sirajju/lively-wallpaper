@@ -150,33 +150,55 @@ body.focus-mode .widget[data-widget="todo"] {
   background: color-mix(in srgb, #ef4444 12%, transparent);
 }
 
-/* Drag-to-resize handle (bottom-right corner) */
+/* Drag-to-resize handles: right = width, bottom = height, corner = both */
 .widget-resize-handle {
   position: absolute;
-  right: 5px;
-  bottom: 5px;
+  z-index: 7;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.widget-resize-handle.rh-x {
+  top: 20%;
+  bottom: 20%;
+  right: 0;
+  width: 8px;
+  cursor: ew-resize;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--w-accent, var(--accent)) 55%, transparent);
+}
+
+.widget-resize-handle.rh-y {
+  left: 20%;
+  right: 20%;
+  bottom: 0;
+  height: 8px;
+  cursor: ns-resize;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--w-accent, var(--accent)) 55%, transparent);
+}
+
+.widget-resize-handle.rh-both {
+  right: 3px;
+  bottom: 3px;
   width: 16px;
   height: 16px;
-  z-index: 7;
   cursor: nwse-resize;
-  opacity: 0;
   border-right: 2px solid var(--w-accent, var(--accent));
   border-bottom: 2px solid var(--w-accent, var(--accent));
-  border-bottom-right-radius: 7px;
-  transition: opacity 0.15s ease;
+  border-bottom-right-radius: 8px;
 }
 
 .widget:hover .widget-resize-handle {
-  opacity: 0.45;
+  opacity: 0.4;
 }
 
-.widget-resize-handle:hover {
+.widget:hover .widget-resize-handle:hover {
   opacity: 1;
 }
 
 .widget.is-resizing {
   transition: none;
-  cursor: nwse-resize;
 }
 
 /* Snap-into-place animation on drop */

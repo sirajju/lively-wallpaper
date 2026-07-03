@@ -19,9 +19,7 @@ import { clamp } from './utils.js';
 import {
   getWidgetSpan,
   syncWidgetSizeAttr,
-  nearestSize,
-  setWidgetSize,
-  SIZE_PRESETS,
+  setWidgetSpan,
 } from './widget-sizes.js';
 
 const INTERACTIVE = 'input, textarea, select, button, a, label, .note-text';
@@ -68,7 +66,9 @@ let grabLocalY = 0;
 let topZ = 10;
 
 let resizing = null;
-let resizePreviewSize = null;
+let resizeAxis = 'both';
+let resizeCols = 0;
+let resizeRows = 0;
 
 let guideLayer = null;
 let highlightEl = null;
@@ -272,19 +272,27 @@ export function initDrag() {
   document.querySelectorAll('.widget[data-widget]').forEach((el) => {
     el.addEventListener('mousedown', onMouseDown);
     if (!el.querySelector('.widget-resize-handle')) {
-      const handle = document.createElement('div');
-      handle.className = 'widget-resize-handle';
-      handle.setAttribute('aria-hidden', 'true');
-      handle.title = 'Drag to resize';
-      handle.addEventListener('mousedown', onResizeDown);
-      el.appendChild(handle);
+      // Right edge = width, bottom edge = height, corner = both.
+      [
+        ['x', 'Drag to resize width'],
+        ['y', 'Drag to resize height'],
+        ['both', 'Drag to resize'],
+      ].forEach(([axis, title]) => {
+        const handle = document.createElement('div');
+        handle.className = `widget-resize-handle rh-${axis}`;
+        handle.dataset.axis = axis;
+        handle.setAttribute('aria-hidden', 'true');
+        handle.title = title;
+        handle.addEventListener('mousedown', onResizeDown);
+        el.appendChild(handle);
+      });
     }
   });
 
   applySavedPositions();
 
   persistence.subscribe((key) => {
-    if (key === 'widgetDocks' || key === 'widgetSizes' || key === 'hiddenWidgets' || key === '*') {
+    if (key === 'widgetDocks' || key === 'widgetSpans' || key === 'hiddenWidgets' || key === '*') {
       applySavedPositions();
     }
   });
@@ -411,14 +419,19 @@ function onResizeDown(e) {
   if (e.button !== 0) return;
   if (window.innerWidth <= GRID_BREAKPOINT) return;
 
-  const widget = /** @type {HTMLElement} */ (e.currentTarget).closest('.widget');
+  const handle = /** @type {HTMLElement} */ (e.currentTarget);
+  const widget = handle.closest('.widget');
   if (!widget) return;
 
   e.stopPropagation();
   e.preventDefault();
 
   resizing = widget;
-  resizePreviewSize = null;
+  resizeAxis = handle.dataset.axis || 'both';
+  const [cols, rows] = spanOf(widget);
+  resizeCols = cols;
+  resizeRows = rows;
+
   widget.classList.add('is-resizing');
   widget.style.zIndex = String(++topZ);
   document.body.classList.add('is-docking');
@@ -442,17 +455,22 @@ function onResizeMove(e) {
   const localX = e.clientX - m.rect.left;
   const localY = e.clientY - m.rect.top;
 
-  // Fractional span from the widget's top-left corner to the pointer.
-  const spanCFloat = (localX - cellLeft + GAP) / (m.colW + GAP);
-  const spanRFloat = (localY - cellTop + GAP) / (m.rowH + GAP);
+  const [curC, curR] = spanOf(resizing);
+  let sc = curC;
+  let sr = curR;
 
-  const size = nearestSize(spanCFloat, spanRFloat);
-  resizePreviewSize = size;
+  // Integer cell count from the widget's top-left to the pointer, per axis.
+  if (resizeAxis === 'x' || resizeAxis === 'both') {
+    sc = Math.round((localX - cellLeft + GAP) / (m.colW + GAP));
+  }
+  if (resizeAxis === 'y' || resizeAxis === 'both') {
+    sr = Math.round((localY - cellTop + GAP) / (m.rowH + GAP));
+  }
 
-  let sc = SIZE_PRESETS[size].cols;
-  let sr = SIZE_PRESETS[size].rows;
   sc = clamp(sc, 1, COLS - col);
   sr = clamp(sr, 1, ROWS - row);
+  resizeCols = sc;
+  resizeRows = sr;
 
   const box = cellBox(col, row, sc, sr, m);
   resizing.style.width = `${box.width}px`;
@@ -475,15 +493,15 @@ function onResizeUp() {
   hideHighlight();
   document.body.classList.remove('is-docking');
 
-  const size = resizePreviewSize;
   const id = widget.dataset.widget;
+  const cols = resizeCols;
+  const rows = resizeRows;
   resizing = null;
-  resizePreviewSize = null;
 
-  if (size && id) {
-    // Persisting the size triggers applySavedPositions via the subscription,
-    // which reflows every widget to the new footprint.
-    setWidgetSize(id, size);
+  if (id) {
+    // Persisting the span triggers applySavedPositions via the subscription,
+    // which reflows every widget to the new footprint and saves to state.
+    setWidgetSpan(id, cols, rows);
   } else {
     applySavedPositions();
   }

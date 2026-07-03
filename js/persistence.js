@@ -1,10 +1,16 @@
 /**
- * Persistence abstraction for Lively Wallpaper environments.
- * Avoids localStorage, sessionStorage, IndexedDB, cookies, and service workers.
+ * Persistence abstraction for Aurora Desk.
  *
- * Lively mode: syncs via livelyPropertyListener + in-memory cache.
- * Browser mode: in-memory only with import/export helpers.
+ * Storage layers (in order of preference):
+ *   1. localStorage — survives reloads in browsers and Lively's WebView2.
+ *   2. In-memory Map — always present; used as the live cache and as a
+ *      fallback when localStorage is unavailable (e.g. disabled/sandboxed).
+ *   3. Lively savedState property — for portable export/import across machines.
+ *
+ * All three are kept in sync so a reload restores the last state automatically.
  */
+
+const STORAGE_KEY = 'auroraDeskState';
 
 const DEFAULT_STATE = {
   accentColor: '#8B5CF6',
@@ -36,7 +42,7 @@ const DEFAULT_STATE = {
   ],
   widgetPositions: {},
   widgetDocks: {},
-  widgetSizes: {},
+  widgetSpans: {},
   todos: [],
   notes: [],
   countdowns: [],
@@ -62,6 +68,58 @@ const listeners = new Set();
 
 let livelyReady = false;
 let persistDebounce = null;
+let storageDebounce = null;
+let storageAvailable = false;
+
+/** Get the localStorage object if it's usable, else null. */
+function safeStorage() {
+  try {
+    const ls = window.localStorage;
+    const probe = '__aurora_probe__';
+    ls.setItem(probe, '1');
+    ls.removeItem(probe);
+    return ls;
+  } catch {
+    return null;
+  }
+}
+
+/** Load persisted state from localStorage into the in-memory cache. */
+function loadFromStorage() {
+  const ls = safeStorage();
+  storageAvailable = !!ls;
+  if (!ls) return;
+  try {
+    const raw = ls.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data && typeof data === 'object') {
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined) memoryStore.set(key, value);
+      });
+    }
+  } catch {
+    /* corrupt storage must not break startup */
+  }
+}
+
+/** Persist the full state to localStorage (debounced). */
+function scheduleStorageSave() {
+  if (!storageAvailable) return;
+  clearTimeout(storageDebounce);
+  storageDebounce = setTimeout(() => {
+    const ls = safeStorage();
+    if (!ls) return;
+    try {
+      ls.setItem(STORAGE_KEY, exportJSON());
+    } catch {
+      /* quota or serialization errors are non-fatal */
+    }
+  }, 250);
+}
+
+// Restore immediately so widgets read persisted values on first init.
+loadFromStorage();
 
 /**
  * Detect Lively Wallpaper host environment.
@@ -114,6 +172,7 @@ export function set(key, value) {
       /* listener errors must not break persistence */
     }
   });
+  scheduleStorageSave();
   scheduleLivelySync();
 }
 
@@ -148,6 +207,7 @@ export function mergeAll(data) {
       /* noop */
     }
   });
+  scheduleStorageSave();
 }
 
 /**
