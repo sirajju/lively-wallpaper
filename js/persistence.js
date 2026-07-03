@@ -41,6 +41,7 @@ const DEFAULT_STATE = {
   events: [],
   worldClocks: ['America/New_York', 'Europe/London', 'Asia/Tokyo'],
   githubUsername: '',
+  spotifyToken: '',
   pomodoroWork: 25,
   pomodoroBreak: 5,
 };

@@ -142,13 +142,21 @@
         <span class="spotify-status widget-muted"></span>
       </header>
       <div class="spotify-body">
-        <div class="spotify-art"></div>
+        <div class="spotify-art">
+          <div class="spotify-eq" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        </div>
         <div class="spotify-meta">
           <div class="spotify-title">Not Playing</div>
           <div class="spotify-artist widget-muted"></div>
           <div class="spotify-album widget-muted"></div>
         </div>
       </div>
+      <div class="spotify-connect">
+        <input class="spotify-token" type="password" placeholder="Paste Spotify access token" aria-label="Spotify access token" autocomplete="off">
+        <button class="btn spotify-connect-btn">Connect</button>
+        <button class="btn btn-ghost spotify-disconnect-btn" hidden>Disconnect</button>
+      </div>
+      <p class="spotify-hint widget-muted">Tip: in Lively, playback is detected automatically from the Spotify app. Optionally paste a Web API token to link your account.</p>
     </article>
 
     <!-- GitHub -->
