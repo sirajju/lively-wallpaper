@@ -35,6 +35,7 @@ const DEFAULT_STATE = {
     'motivation',
   ],
   widgetPositions: {},
+  widgetDocks: {},
   todos: [],
   notes: [],
   countdowns: [],
