@@ -30,24 +30,32 @@ export function initSettings() {
   const panel = document.getElementById('settings-panel');
   const toggle = document.getElementById('settings-toggle');
   const closeBtn = panel?.querySelector('.settings-close');
+  const backdrop = document.getElementById('settings-backdrop');
 
   if (!panel || !toggle) return;
 
+  function openPanel() {
+    panel.classList.add('is-open');
+    backdrop?.classList.add('is-open');
+    panel.setAttribute('aria-hidden', 'false');
+  }
+
+  function closePanel() {
+    panel.classList.remove('is-open');
+    backdrop?.classList.remove('is-open');
+    panel.setAttribute('aria-hidden', 'true');
+  }
+
   toggle.addEventListener('click', () => {
-    panel.classList.toggle('is-open');
-    panel.setAttribute('aria-hidden', panel.classList.contains('is-open') ? 'false' : 'true');
+    if (panel.classList.contains('is-open')) closePanel();
+    else openPanel();
   });
 
-  closeBtn?.addEventListener('click', () => {
-    panel.classList.remove('is-open');
-    panel.setAttribute('aria-hidden', 'true');
-  });
+  closeBtn?.addEventListener('click', closePanel);
+  backdrop?.addEventListener('click', closePanel);
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      panel.classList.remove('is-open');
-      panel.setAttribute('aria-hidden', 'true');
-    }
+    if (e.key === 'Escape') closePanel();
   });
 
   bindControls(panel);
