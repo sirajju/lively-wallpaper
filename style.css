@@ -931,13 +931,15 @@ input:focus, select:focus {
 .widget-toggles {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: 4px 12px;
 }
 
-.widget-toggle {
+.widget-toggles .widget-toggle {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  margin-bottom: 0;
   font-size: 0.8rem;
   cursor: pointer;
   text-transform: capitalize;
