@@ -94,5 +94,20 @@ export function initPomodoro() {
     updateUI();
   });
 
+  persistence.subscribe((key) => {
+    if (key === 'pomodoroWork' || key === '*') {
+      workSec = Number(persistence.get('pomodoroWork', 25)) * 60;
+      if (workInput) workInput.value = String(workSec / 60);
+      if (!running && isWork) remaining = workSec;
+      updateUI();
+    }
+    if (key === 'pomodoroBreak' || key === '*') {
+      breakSec = Number(persistence.get('pomodoroBreak', 5)) * 60;
+      if (breakInput) breakInput.value = String(breakSec / 60);
+      if (!running && !isWork) remaining = breakSec;
+      updateUI();
+    }
+  });
+
   updateUI();
 }

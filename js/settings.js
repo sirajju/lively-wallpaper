@@ -9,6 +9,11 @@ import { setMode } from './background.js';
 import { toggleWidgetVisibility } from './focus-mode.js';
 import { resetPositions } from './drag.js';
 import { getSizeOptions, getCurrentSizeKey, setWidgetSize } from './widget-sizes.js';
+import {
+  hasWidgetSettings,
+  renderWidgetSettings,
+  WIDGET_SETTING_KEYS,
+} from './widget-settings.js';
 
 const BG_MODES = [
   'aurora',
@@ -26,6 +31,9 @@ const WIDGETS = [
   'countdown', 'todo', 'notes', 'spotify', 'github', 'system',
   'worldclock', 'events', 'radar', 'rss', 'motivation',
 ];
+
+/** @type {Set<string>} */
+const expandedWidgets = new Set();
 
 export function initSettings() {
   const panel = document.getElementById('settings-panel');
@@ -61,16 +69,12 @@ export function initSettings() {
 
   bindControls(panel);
   applySettings();
-  buildWidgetToggles(panel);
-  buildRssFeedList(panel);
+  buildWidgetCards(panel);
 
   persistence.subscribe((key) => {
     applySettings();
-    if (key === 'widgetSpans' || key === 'hiddenWidgets' || key === '*') {
-      buildWidgetToggles(panel);
-    }
-    if (key === 'rssFeeds' || key === '*') {
-      buildRssFeedList(panel);
+    if (key === 'widgetSpans' || key === 'hiddenWidgets' || key === '*' || WIDGET_SETTING_KEYS.has(key)) {
+      buildWidgetCards(panel);
     }
   });
 }
@@ -128,8 +132,6 @@ function bindControls(panel) {
     if (ok) applySettings();
     importFile.value = '';
   });
-
-  bindRssFeeds(panel);
 
   if (ambient) {
     getSoundOptions().forEach((s) => {
@@ -209,88 +211,7 @@ function applyFont(family) {
   document.documentElement.style.setProperty('--font-family', map[family] || map.system);
 }
 
-function buildRssFeedList(panel) {
-  const list = panel.querySelector('#rss-feed-list');
-  if (!list) return;
-
-  const feeds = /** @type {{ name: string, url: string }[]} */ (
-    persistence.get('rssFeeds', [])
-  );
-
-  list.innerHTML = '';
-  if (!feeds.length) {
-    const empty = document.createElement('li');
-    empty.className = 'settings-hint';
-    empty.textContent = 'No feeds yet.';
-    list.appendChild(empty);
-    return;
-  }
-
-  feeds.forEach((feed, i) => {
-    const li = document.createElement('li');
-    li.className = 'rss-feed-item';
-    li.innerHTML = `
-      <span class="rss-feed-item-name">${escapeHtml(feed.name || 'Unnamed')}</span>
-      <span class="rss-feed-item-url">${escapeHtml(feed.url)}</span>
-      <button class="icon-btn rss-feed-remove" data-index="${i}" aria-label="Remove feed" title="Remove">×</button>
-    `;
-    list.appendChild(li);
-  });
-
-  list.querySelectorAll('.rss-feed-remove').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const idx = Number(btn.getAttribute('data-index'));
-      const current = [...(persistence.get('rssFeeds', []) || [])];
-      current.splice(idx, 1);
-      persistence.set('rssFeeds', current);
-    });
-  });
-}
-
-function bindRssFeeds(panel) {
-  const nameInput = panel.querySelector('#rss-feed-name');
-  const urlInput = panel.querySelector('#rss-feed-url');
-  const addBtn = panel.querySelector('#rss-feed-add');
-
-  function addFeed() {
-    const name = String(nameInput?.value || '').trim();
-    const url = String(urlInput?.value || '').trim();
-    if (!url) return;
-
-    let parsed;
-    try {
-      parsed = new URL(url);
-    } catch {
-      return;
-    }
-    if (!['http:', 'https:'].includes(parsed.protocol)) return;
-
-    const feeds = [...(persistence.get('rssFeeds', []) || [])];
-    if (feeds.some((f) => f.url === url)) return;
-
-    feeds.push({ name: name || parsed.hostname, url });
-    persistence.set('rssFeeds', feeds);
-
-    if (nameInput) nameInput.value = '';
-    if (urlInput) urlInput.value = '';
-  }
-
-  addBtn?.addEventListener('click', addFeed);
-  urlInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') addFeed();
-  });
-  nameInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') urlInput?.focus();
-  });
-}
-
-function escapeHtml(str) {
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-
-function buildWidgetToggles(panel) {
+function buildWidgetCards(panel) {
   const container = panel.querySelector('.widget-toggles');
   if (!container) return;
 
@@ -299,8 +220,11 @@ function buildWidgetToggles(panel) {
   container.innerHTML = '';
 
   WIDGETS.forEach((id) => {
-    const row = document.createElement('div');
-    row.className = 'widget-row';
+    const card = document.createElement('div');
+    card.className = 'widget-card';
+
+    const header = document.createElement('div');
+    header.className = 'widget-row-header';
 
     const label = document.createElement('label');
     label.className = 'widget-toggle';
@@ -308,6 +232,9 @@ function buildWidgetToggles(panel) {
       <input type="checkbox" data-widget-toggle="${id}" ${hidden.has(id) ? '' : 'checked'}>
       <span>${id.replace(/-/g, ' ')}</span>
     `;
+
+    const controls = document.createElement('div');
+    controls.className = 'widget-row-controls';
 
     const sizeSelect = document.createElement('select');
     sizeSelect.className = 'widget-size-select';
@@ -325,21 +252,63 @@ function buildWidgetToggles(panel) {
       sizeSelect.appendChild(option);
     });
 
-    row.append(label, sizeSelect);
-    container.appendChild(row);
+    controls.appendChild(sizeSelect);
+
+    if (hasWidgetSettings(id)) {
+      const settingsBtn = document.createElement('button');
+      settingsBtn.type = 'button';
+      settingsBtn.className = 'btn-icon btn-ghost widget-settings-toggle';
+      settingsBtn.setAttribute('data-widget-settings', id);
+      settingsBtn.setAttribute('aria-label', `Settings for ${id}`);
+      settingsBtn.title = 'Widget settings';
+      settingsBtn.textContent = '⚙';
+      if (expandedWidgets.has(id)) settingsBtn.classList.add('is-open');
+      controls.appendChild(settingsBtn);
+    }
+
+    header.append(label, controls);
+    card.appendChild(header);
+
+    if (hasWidgetSettings(id)) {
+      const settingsPanel = document.createElement('div');
+      settingsPanel.className = 'widget-settings-panel';
+      settingsPanel.setAttribute('data-widget-panel', id);
+      if (!expandedWidgets.has(id)) settingsPanel.hidden = true;
+      renderWidgetSettings(id, settingsPanel);
+      card.appendChild(settingsPanel);
+    }
+
+    container.appendChild(card);
   });
 
   container.querySelectorAll('[data-widget-toggle]').forEach((input) => {
     input.addEventListener('change', () => {
-      const id = input.getAttribute('data-widget-toggle');
-      toggleWidgetVisibility(id, !input.checked);
+      const widgetId = input.getAttribute('data-widget-toggle');
+      toggleWidgetVisibility(widgetId, !input.checked);
     });
   });
 
   container.querySelectorAll('[data-widget-size]').forEach((select) => {
     select.addEventListener('change', () => {
-      const id = select.getAttribute('data-widget-size');
-      if (id) setWidgetSize(id, select.value);
+      const widgetId = select.getAttribute('data-widget-size');
+      if (widgetId) setWidgetSize(widgetId, select.value);
+    });
+  });
+
+  container.querySelectorAll('[data-widget-settings]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const widgetId = btn.getAttribute('data-widget-settings');
+      if (!widgetId) return;
+      const panelEl = container.querySelector(`[data-widget-panel="${widgetId}"]`);
+      if (!panelEl) return;
+
+      const open = panelEl.hidden;
+      panelEl.hidden = !open;
+      btn.classList.toggle('is-open', open);
+      if (open) expandedWidgets.add(widgetId);
+      else expandedWidgets.delete(widgetId);
+
+      if (open) renderWidgetSettings(widgetId, panelEl);
     });
   });
 }

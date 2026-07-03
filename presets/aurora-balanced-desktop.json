@@ -94,6 +94,9 @@
     { "name": "Dev.to", "url": "https://dev.to/feed" },
     { "name": "The Hindu", "url": "https://www.thehindu.com/news/national/feeder/default.rss" }
   ],
+  "rssDisplayMode": "list",
+  "rssMaxItems": 5,
+  "rssRotateSeconds": 12,
   "pomodoroWork": 25,
   "pomodoroBreak": 5
 }

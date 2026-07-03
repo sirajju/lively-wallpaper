@@ -1,6 +1,6 @@
 import * as persistence from '../persistence.js';
 
-const CITY_LABELS = {
+export const CITY_LABELS = {
   'America/New_York': 'New York',
   'Europe/London': 'London',
   'Asia/Tokyo': 'Tokyo',

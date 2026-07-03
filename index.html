@@ -219,10 +219,9 @@
     <article class="widget pos-rss" id="rss-widget" data-widget="rss">
       <header class="widget-header">
         <h3>Dev News</h3>
-        <span class="rss-source widget-muted"></span>
+        <span class="rss-status widget-muted"></span>
       </header>
-      <p class="rss-title clickable">Loading…</p>
-      <span class="rss-status widget-muted"></span>
+      <ul class="rss-list" aria-live="polite"></ul>
     </article>
 
     <!-- Motivation -->
@@ -283,18 +282,8 @@
         <label>Volume <input id="set-ambient-vol" type="range" min="0" max="100" value="30"></label>
       </section>
       <section class="settings-section">
-        <h3>RSS Feeds</h3>
-        <p class="settings-hint">Feeds power the Dev News widget. Name + URL, then add.</p>
-        <div class="rss-settings-form">
-          <input id="rss-feed-name" type="text" placeholder="Name" aria-label="Feed name">
-          <input id="rss-feed-url" type="url" placeholder="https://example.com/feed" aria-label="Feed URL">
-          <button class="btn-icon btn-primary" id="rss-feed-add" aria-label="Add feed" title="Add feed">+</button>
-        </div>
-        <ul class="rss-feed-list" id="rss-feed-list"></ul>
-      </section>
-      <section class="settings-section">
         <h3>Widgets</h3>
-        <p class="settings-hint">Drag a widget to dock. Resize from its edges (width/height) or corner (both). Pick a preset size below.</p>
+        <p class="settings-hint">Toggle visibility, pick a size, and tap ⚙ for widget-specific settings.</p>
         <div class="btn-row reset-row">
           <button class="btn-icon btn-ghost" id="reset-layout" aria-label="Reset layout" title="Reset layout">↺</button>
         </div>

@@ -55,6 +55,9 @@ const DEFAULT_STATE = {
     { name: 'Dev.to', url: 'https://dev.to/feed' },
     { name: 'CSS-Tricks', url: 'https://css-tricks.com/feed/' },
   ],
+  rssDisplayMode: 'list',
+  rssMaxItems: 5,
+  rssRotateSeconds: 12,
   pomodoroWork: 25,
   pomodoroBreak: 5,
 };

@@ -779,15 +779,42 @@ body.focus-mode .widget[data-widget="todo"] {
 
 .radar-placeholder { font-size: 2.5rem; opacity: 0.4; }
 
-.rss-title {
-  font-size: 0.9rem;
-  line-height: 1.5;
-  transition: opacity 0.3s;
-  cursor: pointer;
+.rss-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
 }
 
-.rss-title:hover { color: var(--accent); }
-.clickable { cursor: pointer; }
+.rss-item-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  line-height: 1.35;
+}
+
+.rss-item-source {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.rss-item-title {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+}
+
+.rss-item-link:hover .rss-item-title { color: var(--accent); }
+
+.rss-item-rotate .rss-item-title {
+  font-size: 0.9rem;
+  transition: opacity 0.3s;
+}
 
 .motivation-quote {
   font-size: 1rem;
@@ -1062,7 +1089,96 @@ input:focus, select:focus {
 .widget-toggles {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+}
+
+.widget-card {
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 8px;
+}
+
+.widget-row-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.widget-row-controls {
+  display: flex;
+  align-items: center;
   gap: 6px;
+}
+
+.widget-settings-toggle.is-open {
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.widget-settings-panel {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.widget-setting-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  margin-bottom: 10px;
+}
+
+.widget-setting-field span {
+  color: var(--text-secondary);
+}
+
+.widget-setting-field input,
+.widget-setting-field select {
+  font-size: 0.78rem;
+}
+
+.widget-setting-hint {
+  margin: 0 0 8px;
+}
+
+.widget-setting-list {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.widget-setting-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.35);
+  font-size: 0.72rem;
+}
+
+.widget-setting-list-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.widget-setting-inline {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.widget-setting-inline select {
+  flex: 1;
+  min-width: 0;
 }
 
 .widget-row {
