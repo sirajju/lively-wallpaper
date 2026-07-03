@@ -89,6 +89,11 @@
   ],
   "githubUsername": "",
   "weatherCoords": { "lat": 19.076, "lon": 72.8777, "label": "Mumbai" },
+  "rssFeeds": [
+    { "name": "Hacker News", "url": "https://hnrss.org/frontpage" },
+    { "name": "Dev.to", "url": "https://dev.to/feed" },
+    { "name": "The Hindu", "url": "https://www.thehindu.com/news/national/feeder/default.rss" }
+  ],
   "pomodoroWork": 25,
   "pomodoroBreak": 5
 }

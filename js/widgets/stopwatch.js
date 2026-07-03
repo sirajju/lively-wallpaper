@@ -19,9 +19,23 @@ export function initStopwatch() {
     if (display) display.textContent = formatDuration(elapsed / 1000);
   }
 
+  function setPlayBtn(btn, isRunning, hasStarted) {
+    if (!btn) return;
+    if (isRunning) {
+      btn.textContent = '⏸';
+      btn.setAttribute('aria-label', 'Pause');
+      btn.title = 'Pause';
+    } else {
+      btn.textContent = '▶';
+      const label = hasStarted ? 'Resume' : 'Start';
+      btn.setAttribute('aria-label', label);
+      btn.title = label;
+    }
+  }
+
   startBtn?.addEventListener('click', () => {
     running = !running;
-    startBtn.textContent = running ? 'Pause' : 'Resume';
+    setPlayBtn(startBtn, running, elapsed > 0);
     if (running) {
       lapStart = Date.now() - elapsed;
       timerId = setInterval(() => {
@@ -46,7 +60,7 @@ export function initStopwatch() {
     running = false;
     clearInterval(timerId);
     elapsed = 0;
-    if (startBtn) startBtn.textContent = 'Start';
+    setPlayBtn(startBtn, false, false);
     if (lapsEl) lapsEl.innerHTML = '';
     update();
   });

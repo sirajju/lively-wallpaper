@@ -50,6 +50,11 @@ const DEFAULT_STATE = {
   worldClocks: ['Asia/Kolkata', 'Europe/London', 'America/New_York'],
   githubUsername: '',
   weatherCoords: null,
+  rssFeeds: [
+    { name: 'Hacker News', url: 'https://hnrss.org/frontpage' },
+    { name: 'Dev.to', url: 'https://dev.to/feed' },
+    { name: 'CSS-Tricks', url: 'https://css-tricks.com/feed/' },
+  ],
   pomodoroWork: 25,
   pomodoroBreak: 5,
 };

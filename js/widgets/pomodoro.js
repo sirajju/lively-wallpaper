@@ -53,9 +53,17 @@ export function initPomodoro() {
     }
   }
 
+  function setPlayBtn(btn, isRunning) {
+    if (!btn) return;
+    btn.textContent = isRunning ? '⏸' : '▶';
+    const label = isRunning ? 'Pause' : 'Start';
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
+  }
+
   startBtn?.addEventListener('click', () => {
     running = !running;
-    startBtn.textContent = running ? 'Pause' : 'Start';
+    setPlayBtn(startBtn, running);
     if (running) {
       timerId = setInterval(tick, 1000);
     } else {
@@ -68,7 +76,7 @@ export function initPomodoro() {
     clearInterval(timerId);
     isWork = true;
     remaining = workSec;
-    if (startBtn) startBtn.textContent = 'Start';
+    setPlayBtn(startBtn, false);
     updateUI();
   });
 

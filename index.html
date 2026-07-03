@@ -70,8 +70,8 @@
       <div class="pomo-controls">
         <label class="inline-label">Work <input class="pomo-work" type="number" min="1" max="90" value="25"></label>
         <label class="inline-label">Break <input class="pomo-break" type="number" min="1" max="30" value="5"></label>
-        <button class="btn pomo-start">Start</button>
-        <button class="btn btn-ghost pomo-reset">Reset</button>
+        <button class="btn-icon btn-primary pomo-start" aria-label="Start" title="Start">▶</button>
+        <button class="btn-icon btn-ghost pomo-reset" aria-label="Reset" title="Reset">↺</button>
       </div>
     </article>
 
@@ -80,9 +80,9 @@
       <header class="widget-header"><h3>Stopwatch</h3></header>
       <div class="sw-time">00:00</div>
       <div class="btn-row">
-        <button class="btn sw-start">Start</button>
-        <button class="btn btn-ghost sw-lap">Lap</button>
-        <button class="btn btn-ghost sw-reset">Reset</button>
+        <button class="btn-icon btn-primary sw-start" aria-label="Start" title="Start">▶</button>
+        <button class="btn-icon btn-ghost sw-lap" aria-label="Lap" title="Lap">⏱</button>
+        <button class="btn-icon btn-ghost sw-reset" aria-label="Reset" title="Reset">↺</button>
       </div>
       <div class="sw-laps"></div>
     </article>
@@ -93,7 +93,7 @@
       <div class="countdown-form">
         <input class="cd-label" type="text" placeholder="Event name" aria-label="Event name">
         <input class="cd-date" type="datetime-local" aria-label="Target date">
-        <button class="btn cd-add">Add</button>
+        <button class="btn-icon btn-primary cd-add" aria-label="Add countdown" title="Add">+</button>
       </div>
       <div class="countdown-list"></div>
     </article>
@@ -103,8 +103,8 @@
       <header class="widget-header">
         <h3>Tasks</h3>
         <div class="btn-row compact">
-          <button class="btn btn-ghost todo-export" title="Export JSON">Export</button>
-          <button class="btn btn-ghost todo-import" title="Import JSON">Import</button>
+          <button class="btn-icon btn-ghost todo-export" aria-label="Export tasks" title="Export">⬇</button>
+          <button class="btn-icon btn-ghost todo-import" aria-label="Import tasks" title="Import">⬆</button>
           <input class="todo-import-file" type="file" accept=".json" hidden>
         </div>
       </header>
@@ -116,7 +116,7 @@
           <option value="high">High</option>
         </select>
         <input class="todo-tags" type="text" placeholder="tags" aria-label="Tags">
-        <button class="btn todo-add">Add</button>
+        <button class="btn-icon btn-primary todo-add" aria-label="Add task" title="Add">+</button>
       </div>
       <div class="todo-list"></div>
     </article>
@@ -126,9 +126,9 @@
       <header class="widget-header">
         <h3>Notes</h3>
         <div class="btn-row compact">
-          <button class="btn btn-ghost notes-add">+ Note</button>
-          <button class="btn btn-ghost notes-export">Export</button>
-          <button class="btn btn-ghost notes-import">Import</button>
+          <button class="btn-icon btn-ghost notes-add" aria-label="Add note" title="Add note">+</button>
+          <button class="btn-icon btn-ghost notes-export" aria-label="Export notes" title="Export">⬇</button>
+          <button class="btn-icon btn-ghost notes-import" aria-label="Import notes" title="Import">⬆</button>
           <input class="notes-import-file" type="file" accept=".json" hidden>
         </div>
       </header>
@@ -162,7 +162,7 @@
       </header>
       <div class="gh-form">
         <input class="gh-username" type="text" placeholder="username" aria-label="GitHub username">
-        <button class="btn gh-load">Load</button>
+        <button class="btn-icon btn-primary gh-load" aria-label="Load profile" title="Load">→</button>
       </div>
       <div class="gh-streak widget-muted"></div>
       <div class="gh-graph"></div>
@@ -190,7 +190,7 @@
       <div class="wc-list"></div>
       <div class="wc-form">
         <select class="wc-add-select" aria-label="Add city"></select>
-        <button class="btn wc-add">Add</button>
+        <button class="btn-icon btn-primary wc-add" aria-label="Add city" title="Add">+</button>
       </div>
     </article>
 
@@ -201,7 +201,7 @@
         <input class="ev-title" type="text" placeholder="Event" aria-label="Event title">
         <input class="ev-date" type="date" aria-label="Event date">
         <input class="ev-time" type="time" value="09:00" aria-label="Event time">
-        <button class="btn ev-add">Add</button>
+        <button class="btn-icon btn-primary ev-add" aria-label="Add event" title="Add">+</button>
       </div>
       <div class="events-list"></div>
     </article>
@@ -229,7 +229,7 @@
     <article class="widget pos-motivation" id="motivation-widget" data-widget="motivation">
       <header class="widget-header">
         <h3>Motivation</h3>
-        <button class="btn btn-ghost motivation-next">Next</button>
+        <button class="btn-icon btn-ghost motivation-next" aria-label="Next quote" title="Next">→</button>
       </header>
       <p class="motivation-quote">"Stay curious."</p>
     </article>
@@ -269,8 +269,7 @@
       <section class="settings-section">
         <h3>Preferences</h3>
         <label class="check-label"><input id="set-time-24" type="checkbox"> 24-hour time</label>
-        <label class="check-
-        label"><input id="set-focus" type="checkbox"> Focus mode</label>
+        <label class="check-label"><input id="set-focus" type="checkbox"> Focus mode</label>
         <label>Temperature
           <select id="set-units">
             <option value="celsius">Celsius</option>
@@ -284,18 +283,28 @@
         <label>Volume <input id="set-ambient-vol" type="range" min="0" max="100" value="30"></label>
       </section>
       <section class="settings-section">
+        <h3>RSS Feeds</h3>
+        <p class="settings-hint">Feeds power the Dev News widget. Name + URL, then add.</p>
+        <div class="rss-settings-form">
+          <input id="rss-feed-name" type="text" placeholder="Name" aria-label="Feed name">
+          <input id="rss-feed-url" type="url" placeholder="https://example.com/feed" aria-label="Feed URL">
+          <button class="btn-icon btn-primary" id="rss-feed-add" aria-label="Add feed" title="Add feed">+</button>
+        </div>
+        <ul class="rss-feed-list" id="rss-feed-list"></ul>
+      </section>
+      <section class="settings-section">
         <h3>Widgets</h3>
         <p class="settings-hint">Drag a widget to dock. Resize from its edges (width/height) or corner (both). Pick a preset size below.</p>
         <div class="btn-row reset-row">
-          <button class="btn btn-ghost" id="reset-layout">Reset to Default Layout</button>
+          <button class="btn-icon btn-ghost" id="reset-layout" aria-label="Reset layout" title="Reset layout">↺</button>
         </div>
         <div class="widget-toggles"></div>
       </section>
       <section class="settings-section">
         <h3>Data</h3>
         <div class="btn-row">
-          <button class="btn" id="export-state">Export All</button>
-          <button class="btn btn-ghost" id="import-state">Import</button>
+          <button class="btn-icon btn-primary" id="export-state" aria-label="Export all settings" title="Export all">⬇</button>
+          <button class="btn-icon btn-ghost" id="import-state" aria-label="Import settings" title="Import">⬆</button>
           <input id="import-state-file" type="file" accept=".json" hidden>
         </div>
         <p class="settings-hint">In Lively, paste exported JSON into the Saved State property for persistence.</p>

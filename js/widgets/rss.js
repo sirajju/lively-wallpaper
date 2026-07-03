@@ -1,11 +1,14 @@
-const FEEDS = [
-  { name: 'Hacker News', url: 'https://hnrss.org/frontpage' },
-  { name: 'Dev.to', url: 'https://dev.to/feed' },
-  { name: 'CSS-Tricks', url: 'https://css-tricks.com/feed/' },
-];
+import * as persistence from '../persistence.js';
 
 let items = [];
 let index = 0;
+
+/** @typedef {{ name: string, url: string }} RssFeed */
+
+function getFeeds() {
+  const feeds = persistence.get('rssFeeds', []);
+  return Array.isArray(feeds) ? feeds.filter((f) => f && f.url) : [];
+}
 
 export function initRSS() {
   const el = document.getElementById('rss-widget');
@@ -15,7 +18,7 @@ export function initRSS() {
   const sourceEl = el.querySelector('.rss-source');
   const statusEl = el.querySelector('.rss-status');
 
-  async function fetchFeed(feed) {
+  async function fetchFeed(/** @type {RssFeed} */ feed) {
     try {
       const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`;
       const res = await fetch(api);
@@ -24,7 +27,7 @@ export function initRSS() {
       return (data.items || []).slice(0, 10).map((item) => ({
         title: item.title,
         link: item.link,
-        source: feed.name,
+        source: feed.name || 'Feed',
       }));
     } catch {
       return [];
@@ -32,14 +35,23 @@ export function initRSS() {
   }
 
   async function loadAll() {
+    const feeds = getFeeds();
+    if (!feeds.length) {
+      if (statusEl) statusEl.textContent = 'No feeds configured';
+      if (titleEl) titleEl.textContent = 'Add RSS feeds in Settings';
+      items = [];
+      return;
+    }
+
     if (statusEl) statusEl.textContent = 'Loading feeds…';
-    const results = await Promise.all(FEEDS.map(fetchFeed));
+    const results = await Promise.all(feeds.map(fetchFeed));
     items = results.flat();
     if (!items.length) {
       if (statusEl) statusEl.textContent = 'Feeds unavailable offline';
-      if (titleEl) titleEl.textContent = 'Connect to load developer news';
+      if (titleEl) titleEl.textContent = 'Connect to load news';
       return;
     }
+    index = 0;
     if (statusEl) statusEl.textContent = `${items.length} articles`;
     show();
   }
@@ -59,6 +71,10 @@ export function initRSS() {
       titleEl.onclick = () => window.open(item.link, '_blank', 'noopener');
     }
   }
+
+  persistence.subscribe((key) => {
+    if (key === 'rssFeeds' || key === '*') loadAll();
+  });
 
   loadAll();
   setInterval(() => {

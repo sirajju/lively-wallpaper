@@ -62,11 +62,15 @@ export function initSettings() {
   bindControls(panel);
   applySettings();
   buildWidgetToggles(panel);
+  buildRssFeedList(panel);
 
   persistence.subscribe((key) => {
     applySettings();
     if (key === 'widgetSpans' || key === 'hiddenWidgets' || key === '*') {
       buildWidgetToggles(panel);
+    }
+    if (key === 'rssFeeds' || key === '*') {
+      buildRssFeedList(panel);
     }
   });
 }
@@ -124,6 +128,8 @@ function bindControls(panel) {
     if (ok) applySettings();
     importFile.value = '';
   });
+
+  bindRssFeeds(panel);
 
   if (ambient) {
     getSoundOptions().forEach((s) => {
@@ -201,6 +207,87 @@ function applyFont(family) {
     mono: '"Cascadia Code", "Fira Code", Consolas, monospace',
   };
   document.documentElement.style.setProperty('--font-family', map[family] || map.system);
+}
+
+function buildRssFeedList(panel) {
+  const list = panel.querySelector('#rss-feed-list');
+  if (!list) return;
+
+  const feeds = /** @type {{ name: string, url: string }[]} */ (
+    persistence.get('rssFeeds', [])
+  );
+
+  list.innerHTML = '';
+  if (!feeds.length) {
+    const empty = document.createElement('li');
+    empty.className = 'settings-hint';
+    empty.textContent = 'No feeds yet.';
+    list.appendChild(empty);
+    return;
+  }
+
+  feeds.forEach((feed, i) => {
+    const li = document.createElement('li');
+    li.className = 'rss-feed-item';
+    li.innerHTML = `
+      <span class="rss-feed-item-name">${escapeHtml(feed.name || 'Unnamed')}</span>
+      <span class="rss-feed-item-url">${escapeHtml(feed.url)}</span>
+      <button class="icon-btn rss-feed-remove" data-index="${i}" aria-label="Remove feed" title="Remove">×</button>
+    `;
+    list.appendChild(li);
+  });
+
+  list.querySelectorAll('.rss-feed-remove').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.getAttribute('data-index'));
+      const current = [...(persistence.get('rssFeeds', []) || [])];
+      current.splice(idx, 1);
+      persistence.set('rssFeeds', current);
+    });
+  });
+}
+
+function bindRssFeeds(panel) {
+  const nameInput = panel.querySelector('#rss-feed-name');
+  const urlInput = panel.querySelector('#rss-feed-url');
+  const addBtn = panel.querySelector('#rss-feed-add');
+
+  function addFeed() {
+    const name = String(nameInput?.value || '').trim();
+    const url = String(urlInput?.value || '').trim();
+    if (!url) return;
+
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return;
+    }
+    if (!['http:', 'https:'].includes(parsed.protocol)) return;
+
+    const feeds = [...(persistence.get('rssFeeds', []) || [])];
+    if (feeds.some((f) => f.url === url)) return;
+
+    feeds.push({ name: name || parsed.hostname, url });
+    persistence.set('rssFeeds', feeds);
+
+    if (nameInput) nameInput.value = '';
+    if (urlInput) urlInput.value = '';
+  }
+
+  addBtn?.addEventListener('click', addFeed);
+  urlInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addFeed();
+  });
+  nameInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') urlInput?.focus();
+  });
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
 }
 
 function buildWidgetToggles(panel) {
