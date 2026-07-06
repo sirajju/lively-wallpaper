@@ -124,12 +124,12 @@ function resize() {
 function initBlobs() {
   const cfg = MODES[mode];
   blobs = Array.from({ length: cfg.blobs }, (_, i) => ({
-    x: randomBetween(0.1, 0.9),
-    y: randomBetween(0.1, 0.9),
-    r: randomBetween(120, 280),
+    x: randomBetween(0.05, 0.95),
+    y: randomBetween(0.05, 0.95),
+    r: randomBetween(160, 360),
     color: cfg.colors[i % cfg.colors.length],
     phase: randomBetween(0, Math.PI * 2),
-    speed: randomBetween(0.0002, 0.0006),
+    speed: randomBetween(0.0003, 0.0008),
   }));
 }
 
@@ -170,8 +170,8 @@ function drawFrame(time) {
   const w = window.innerWidth;
   const h = window.innerHeight;
 
-  mouse.x = lerp(mouse.x, mouse.tx, 0.04);
-  mouse.y = lerp(mouse.y, mouse.ty, 0.04);
+  mouse.x = lerp(mouse.x, mouse.tx, 0.06);
+  mouse.y = lerp(mouse.y, mouse.ty, 0.06);
 
   const grad = ctx.createLinearGradient(0, 0, w, h);
   const cfg = MODES[mode];
@@ -179,30 +179,38 @@ function drawFrame(time) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 
-  const parallaxX = (mouse.x - 0.5) * 30;
-  const parallaxY = (mouse.y - 0.5) * 30;
+  const parallaxX = (mouse.x - 0.5) * 50;
+  const parallaxY = (mouse.y - 0.5) * 50;
 
+  ctx.globalCompositeOperation = 'screen';
   blobs.forEach((blob, i) => {
-    const bx = (blob.x + Math.sin(time * blob.speed * speed + blob.phase) * 0.04) * w + parallaxX * (i % 2 ? 1 : -1);
-    const by = (blob.y + Math.cos(time * blob.speed * speed * 0.8 + blob.phase) * 0.03) * h + parallaxY * (i % 2 ? -1 : 1);
-    const radius = blob.r * (1 + Math.sin(time * 0.0004 * speed + i) * 0.08);
+    const drift = Math.sin(time * blob.speed * speed + blob.phase) * 0.06;
+    const bx = (blob.x + drift) * w + parallaxX * (0.6 + (i % 3) * 0.2) * (i % 2 ? 1 : -1);
+    const by = (blob.y + Math.cos(time * blob.speed * speed * 0.7 + blob.phase) * 0.05) * h + parallaxY * (0.5 + (i % 2) * 0.25) * (i % 2 ? -1 : 1);
+    const radius = blob.r * (1.1 + Math.sin(time * 0.0005 * speed + i) * 0.12);
 
     const g = ctx.createRadialGradient(bx, by, 0, bx, by, radius);
-    g.addColorStop(0, blob.color + '99');
-    g.addColorStop(0.5, blob.color + '44');
+    g.addColorStop(0, blob.color + 'cc');
+    g.addColorStop(0.45, blob.color + '66');
     g.addColorStop(1, blob.color + '00');
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.arc(bx, by, radius, 0, Math.PI * 2);
     ctx.fill();
   });
+  ctx.globalCompositeOperation = 'source-over';
 
-  particles.forEach((p) => {
-    p.y -= p.speed * speed * 60;
-    if (p.y < 0) p.y = 1;
-    const px = p.x * w + parallaxX * 0.3;
-    const py = p.y * h;
-    ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+  particles.forEach((p, i) => {
+    p.y -= p.speed * speed * 80;
+    p.x += Math.sin(time * 0.001 * speed + i) * 0.00008;
+    if (p.y < 0) {
+      p.y = 1;
+      p.x = Math.random();
+    }
+    const twinkle = 0.35 + Math.sin(time * 0.003 * speed + i * 1.7) * 0.25;
+    const px = p.x * w + parallaxX * 0.35;
+    const py = p.y * h + parallaxY * 0.2;
+    ctx.fillStyle = `rgba(255,255,255,${p.alpha * twinkle})`;
     ctx.beginPath();
     ctx.arc(px, py, p.size, 0, Math.PI * 2);
     ctx.fill();
@@ -211,19 +219,34 @@ function drawFrame(time) {
   if (mode === 'northern-lights' || mode === 'aurora') {
     drawLightRays(time, w, h);
   }
+
+  drawVignette(w, h);
+}
+
+function drawVignette(w, h) {
+  const vg = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.25, w / 2, h / 2, Math.max(w, h) * 0.75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(15,23,42,0.22)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, w, h);
 }
 
 function drawLightRays(time, w, h) {
-  const count = 3;
+  const count = 5;
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
   for (let i = 0; i < count; i++) {
-    const x = w * (0.2 + i * 0.3) + Math.sin(time * 0.0003 * speed + i) * 40;
-    const g = ctx.createLinearGradient(x, 0, x + 80, h);
+    const x = w * (0.1 + i * 0.2) + Math.sin(time * 0.0004 * speed + i * 1.2) * 60;
+    const sway = Math.sin(time * 0.00025 * speed + i) * 30;
+    const g = ctx.createLinearGradient(x + sway, 0, x + sway + 100, h);
     g.addColorStop(0, 'rgba(167,139,250,0)');
-    g.addColorStop(0.4, 'rgba(103,232,249,0.08)');
+    g.addColorStop(0.35, 'rgba(103,232,249,0.14)');
+    g.addColorStop(0.7, 'rgba(167,139,250,0.06)');
     g.addColorStop(1, 'rgba(167,139,250,0)');
     ctx.fillStyle = g;
-    ctx.fillRect(x - 40, 0, 120, h);
+    ctx.fillRect(x + sway - 50, 0, 160, h);
   }
+  ctx.restore();
 }
 
 export default { initBackground, setMode };

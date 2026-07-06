@@ -1,7 +1,7 @@
-import { weatherIcon } from '../utils.js';
 import * as persistence from '../persistence.js';
+import { iconSvg } from '../icons.js';
+import { renderWeatherIcon, applyTempGradient } from '../weather-icons.js';
 
-// Default location for everything — Mumbai, India. No geolocation prompt.
 const DEFAULT_COORDS = { lat: 19.076, lon: 72.8777, label: 'Mumbai' };
 
 let coords = DEFAULT_COORDS;
@@ -19,6 +19,11 @@ export function initWeather() {
   const locEl = el.querySelector('.weather-location');
   const statusEl = el.querySelector('.weather-status');
 
+  el.querySelector('.detail-humidity') && (el.querySelector('.detail-humidity').innerHTML = iconSvg('droplet', 14));
+  el.querySelector('.detail-wind') && (el.querySelector('.detail-wind').innerHTML = iconSvg('wind', 14));
+  el.querySelector('.detail-sunrise') && (el.querySelector('.detail-sunrise').innerHTML = iconSvg('sunrise', 14));
+  el.querySelector('.detail-sunset') && (el.querySelector('.detail-sunset').innerHTML = iconSvg('sunset', 14));
+
   async function fetchWeather(lat, lon, label) {
     try {
       const units = persistence.get('weatherUnits', 'celsius') === 'fahrenheit' ? 'fahrenheit' : 'celsius';
@@ -29,8 +34,11 @@ export function initWeather() {
       const cur = data.current;
       const daily = data.daily;
 
-      if (tempEl) tempEl.textContent = `${Math.round(cur.temperature_2m)}°${units === 'fahrenheit' ? 'F' : 'C'}`;
-      if (iconEl) iconEl.textContent = weatherIcon(cur.weather_code);
+      if (tempEl) {
+        tempEl.textContent = `${Math.round(cur.temperature_2m)}°${units === 'fahrenheit' ? 'F' : 'C'}`;
+        applyTempGradient(tempEl, units === 'fahrenheit' ? (cur.temperature_2m - 32) * 5 / 9 : cur.temperature_2m);
+      }
+      renderWeatherIcon(iconEl, cur.weather_code);
       if (humEl) humEl.textContent = `${cur.relative_humidity_2m}%`;
       if (windEl) windEl.textContent = `${Math.round(cur.wind_speed_10m)} km/h`;
       if (sunriseEl) sunriseEl.textContent = formatSun(daily.sunrise[0]);
@@ -54,8 +62,6 @@ export function initWeather() {
     if (key === 'weatherUnits' || key === '*') refresh();
   });
 
-  // Use a saved location if the user set one, otherwise default to Mumbai.
-  // No geolocation prompt is ever shown.
   const saved = persistence.get('weatherCoords', null);
   if (saved && typeof saved.lat === 'number' && typeof saved.lon === 'number') {
     coords = { label: 'Mumbai', ...saved };

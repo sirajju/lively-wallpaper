@@ -1,6 +1,4 @@
-/**
- * Mini weather radar using RainViewer tile API.
- */
+import { iconSvg } from '../icons.js';
 
 let radarFrames = [];
 let frameIndex = 0;
@@ -25,7 +23,7 @@ export function initWeatherRadar() {
     } catch {
       if (statusEl) statusEl.textContent = 'Radar unavailable';
       if (mapEl) {
-        mapEl.innerHTML = '<div class="radar-placeholder">🌧️</div>';
+        mapEl.innerHTML = `<div class="radar-placeholder">${iconSvg('cloud-rain', 40)}</div>`;
       }
     }
   }

@@ -1,5 +1,6 @@
 import { formatDuration } from '../utils.js';
 import * as persistence from '../persistence.js';
+import { setPlayPauseIcon } from '../icons.js';
 
 let workSec = 25 * 60;
 let breakSec = 5 * 60;
@@ -8,6 +9,30 @@ let isWork = true;
 let running = false;
 let timerId = null;
 
+function drawTicks(svg) {
+  const g = svg?.querySelector('.pomo-ticks');
+  if (!g) return;
+  g.innerHTML = '';
+  const cx = 60;
+  const cy = 60;
+  const rOuter = 54;
+  const rInner = 49;
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+    const x1 = cx + Math.cos(angle) * rInner;
+    const y1 = cy + Math.sin(angle) * rInner;
+    const x2 = cx + Math.cos(angle) * rOuter;
+    const y2 = cy + Math.sin(angle) * rOuter;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', String(x1));
+    line.setAttribute('y1', String(y1));
+    line.setAttribute('x2', String(x2));
+    line.setAttribute('y2', String(y2));
+    line.setAttribute('class', 'pomo-tick');
+    g.appendChild(line);
+  }
+}
+
 export function initPomodoro() {
   const el = document.getElementById('pomodoro-widget');
   if (!el) return;
@@ -15,10 +40,13 @@ export function initPomodoro() {
   const display = el.querySelector('.pomo-time');
   const label = el.querySelector('.pomo-label');
   const ring = el.querySelector('.pomo-ring-progress');
+  const svg = el.querySelector('.pomo-ring svg');
   const startBtn = el.querySelector('.pomo-start');
   const resetBtn = el.querySelector('.pomo-reset');
   const workInput = el.querySelector('.pomo-work');
   const breakInput = el.querySelector('.pomo-break');
+
+  drawTicks(svg);
 
   workSec = Number(persistence.get('pomodoroWork', 25)) * 60;
   breakSec = Number(persistence.get('pomodoroBreak', 5)) * 60;
@@ -34,6 +62,9 @@ export function initPomodoro() {
   function updateUI() {
     if (display) display.textContent = formatDuration(remaining);
     if (label) label.textContent = isWork ? 'Focus' : 'Break';
+    el.classList.toggle('is-break', !isWork);
+    el.classList.toggle('is-low-time', remaining > 0 && remaining <= 60);
+
     if (ring) {
       const pct = 1 - remaining / total();
       const circumference = 2 * Math.PI * 54;
@@ -53,17 +84,9 @@ export function initPomodoro() {
     }
   }
 
-  function setPlayBtn(btn, isRunning) {
-    if (!btn) return;
-    btn.textContent = isRunning ? '⏸' : '▶';
-    const label = isRunning ? 'Pause' : 'Start';
-    btn.setAttribute('aria-label', label);
-    btn.title = label;
-  }
-
   startBtn?.addEventListener('click', () => {
     running = !running;
-    setPlayBtn(startBtn, running);
+    setPlayPauseIcon(startBtn, running);
     if (running) {
       timerId = setInterval(tick, 1000);
     } else {
@@ -76,7 +99,7 @@ export function initPomodoro() {
     clearInterval(timerId);
     isWork = true;
     remaining = workSec;
-    setPlayBtn(startBtn, false);
+    setPlayPauseIcon(startBtn, false);
     updateUI();
   });
 
@@ -109,5 +132,6 @@ export function initPomodoro() {
     }
   });
 
+  setPlayPauseIcon(startBtn, false);
   updateUI();
 }

@@ -13,6 +13,7 @@ $include = @(
   'LivelyProperties.json',
   'assets',
   'js',
+  'vendor',
   'presets'
 )
 

@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Aurora Desk — Premium interactive desktop wallpaper">
   <title>Aurora Desk</title>
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div id="bg-vignette" aria-hidden="true"></div>
   <div id="cursor-glow" aria-hidden="true"></div>
   <div id="ripple-layer" aria-hidden="true"></div>
 
@@ -33,15 +35,15 @@
         <span class="weather-status widget-muted"></span>
       </header>
       <div class="weather-main">
-        <span class="weather-icon">☀️</span>
+        <span class="weather-icon" aria-hidden="true"></span>
         <span class="weather-temp">--°</span>
       </div>
       <div class="weather-location widget-muted">Locating…</div>
       <div class="weather-details">
-        <span>💧 <span class="weather-humidity">--</span></span>
-        <span>💨 <span class="weather-wind">--</span></span>
-        <span>🌅 <span class="weather-sunrise">--</span></span>
-        <span>🌇 <span class="weather-sunset">--</span></span>
+        <span class="weather-detail-item"><span class="detail-icon detail-humidity" aria-hidden="true"></span> <span class="weather-humidity">--</span></span>
+        <span class="weather-detail-item"><span class="detail-icon detail-wind" aria-hidden="true"></span> <span class="weather-wind">--</span></span>
+        <span class="weather-detail-item"><span class="detail-icon detail-sunrise" aria-hidden="true"></span> <span class="weather-sunrise">--</span></span>
+        <span class="weather-detail-item"><span class="detail-icon detail-sunset" aria-hidden="true"></span> <span class="weather-sunset">--</span></span>
       </div>
     </article>
 
@@ -59,6 +61,17 @@
       <header class="widget-header"><h3>Pomodoro</h3></header>
       <div class="pomo-ring">
         <svg viewBox="0 0 120 120" aria-hidden="true">
+          <defs>
+            <linearGradient id="pomo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="var(--w-accent, var(--accent))" />
+              <stop offset="100%" stop-color="var(--accent-light)" />
+            </linearGradient>
+            <linearGradient id="pomo-gradient-break" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#34d399" />
+              <stop offset="100%" stop-color="#67e8f9" />
+            </linearGradient>
+          </defs>
+          <g class="pomo-ticks"></g>
           <circle class="pomo-ring-bg" cx="60" cy="60" r="54"></circle>
           <circle class="pomo-ring-progress" cx="60" cy="60" r="54"></circle>
         </svg>
@@ -101,7 +114,7 @@
     <!-- Todo -->
     <article class="widget pos-todo" id="todo-widget" data-widget="todo">
       <header class="widget-header">
-        <h3>Tasks</h3>
+        <h3 data-title="Tasks"><span class="todo-count-badge" aria-live="polite"></span></h3>
         <div class="btn-row compact">
           <button class="btn-icon btn-ghost todo-export" aria-label="Export tasks" title="Export">⬇</button>
           <button class="btn-icon btn-ghost todo-import" aria-label="Import tasks" title="Import">⬆</button>
@@ -235,7 +248,7 @@
   </div>
 
   <!-- Settings -->
-  <button id="settings-toggle" class="settings-fab" aria-label="Open settings" title="Settings">⚙</button>
+  <button id="settings-toggle" class="settings-fab" aria-label="Open settings" title="Settings"></button>
   <span id="env-badge" class="env-badge" aria-label="Environment"></span>
 
   <div id="settings-backdrop" class="settings-backdrop"></div>
@@ -249,8 +262,8 @@
       <section class="settings-section">
         <h3>Appearance</h3>
         <label>Accent <input id="set-accent" type="color" value="#8B5CF6"></label>
-        <label>Glass Opacity <input id="set-opacity" type="range" min="10" max="100" value="72"></label>
-        <label>Blur <input id="set-blur" type="range" min="4" max="40" value="20"></label>
+        <label>Glass Opacity <input id="set-opacity" type="range" min="10" max="100" value="22"></label>
+        <label>Blur <input id="set-blur" type="range" min="4" max="40" value="24"></label>
         <label>Widget Scale <input id="set-scale" type="range" min="80" max="120" value="100"></label>
         <label>Animation Speed <input id="set-anim-speed" type="range" min="25" max="200" value="100"></label>
         <label>Background
@@ -283,7 +296,7 @@
       </section>
       <section class="settings-section">
         <h3>Widgets</h3>
-        <p class="settings-hint">Toggle visibility, pick a size, and tap ⚙ for widget-specific settings.</p>
+        <p class="settings-hint">Toggle visibility, pick a size, and tap the gear icon for widget-specific settings.</p>
         <div class="btn-row reset-row">
           <button class="btn-icon btn-ghost" id="reset-layout" aria-label="Reset layout" title="Reset layout">↺</button>
         </div>

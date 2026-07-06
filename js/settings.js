@@ -6,8 +6,10 @@ import * as persistence from './persistence.js';
 import { readFileAsText } from './utils.js';
 import { getSoundOptions } from './ambient.js';
 import { setMode } from './background.js';
+import { applyTheme } from './theme.js';
 import { toggleWidgetVisibility } from './focus-mode.js';
 import { resetPositions } from './drag.js';
+import { setIcon } from './icons.js';
 import { getSizeOptions, getCurrentSizeKey, setWidgetSize } from './widget-sizes.js';
 import {
   hasWidgetSettings,
@@ -162,16 +164,17 @@ function bind(panel, selector, key, read, write) {
 function applySettings() {
   const root = document.documentElement;
   const accent = String(persistence.get('accentColor', '#8B5CF6'));
-  const opacity = Number(persistence.get('glassOpacity', 0.72));
-  const blur = Number(persistence.get('blurAmount', 20));
+  const opacity = Number(persistence.get('glassOpacity', 0.22));
+  const blur = Number(persistence.get('blurAmount', 24));
   const scale = Number(persistence.get('widgetScale', 1));
   const anim = Number(persistence.get('animationSpeed', 1));
 
-  root.style.setProperty('--accent', accent);
   root.style.setProperty('--glass-opacity', String(opacity));
   root.style.setProperty('--glass-blur', `${blur}px`);
   root.style.setProperty('--widget-scale', String(scale));
   root.style.setProperty('--anim-speed', String(anim));
+
+  applyTheme(accent);
 
   const panel = document.getElementById('settings-panel');
   setVal(panel, '#set-accent', accent);
@@ -203,8 +206,8 @@ function setCheck(root, sel, val) {
 
 function applyFont(family) {
   const map = {
-    system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    inter: '"Inter", -apple-system, sans-serif',
+    system: 'var(--font-ui)',
+    inter: '"Inter", var(--font-ui)',
     georgia: 'Georgia, "Times New Roman", serif',
     mono: '"Cascadia Code", "Fira Code", Consolas, monospace',
   };
@@ -258,7 +261,8 @@ function buildWidgetCards(panel) {
       settingsBtn.setAttribute('data-widget-settings', id);
       settingsBtn.setAttribute('aria-label', `Settings for ${id}`);
       settingsBtn.title = 'Widget settings';
-      settingsBtn.textContent = '⚙';
+      settingsBtn.innerHTML = '';
+      setIcon(settingsBtn, 'settings', 16);
       controls.appendChild(settingsBtn);
     }
 

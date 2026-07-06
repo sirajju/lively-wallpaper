@@ -10,6 +10,10 @@ import { initAmbient } from './js/ambient.js';
 import { initFocusMode } from './js/focus-mode.js';
 import { initSettings } from './js/settings.js';
 import { initDrag } from './js/drag.js';
+import { initTheme } from './js/theme.js';
+import { initIcons } from './js/icons.js';
+import { initCustomSelects } from './js/custom-select.js';
+import { initEntranceMotion } from './js/motion.js';
 
 import { initClock } from './js/widgets/clock.js';
 import { initGreeting } from './js/widgets/greeting.js';
@@ -52,6 +56,7 @@ function init() {
   }
 
   safeInit('background', initBackground);
+  safeInit('theme', initTheme);
   safeInit('interaction', initInteraction);
   safeInit('ambient', initAmbient);
   safeInit('focus-mode', initFocusMode);
@@ -81,7 +86,11 @@ function init() {
 
   safeInit('drag', initDrag);
 
+  safeInit('icons', initIcons);
+  safeInit('custom-selects', initCustomSelects);
+
   document.body.classList.add('is-ready');
+  safeInit('motion', initEntranceMotion);
 }
 
 if (document.readyState === 'loading') {

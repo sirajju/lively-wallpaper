@@ -36,6 +36,7 @@ export function initCalendar() {
       gridEl.appendChild(blank);
     }
 
+    let stagger = 0;
     for (let d = 1; d <= daysInMonth; d++) {
       const cell = document.createElement('div');
       cell.className = 'cal-day';
@@ -43,6 +44,8 @@ export function initCalendar() {
       if (dow === 0 || dow === 6) cell.classList.add('cal-weekend');
       if (d === today) cell.classList.add('cal-today');
       cell.textContent = String(d);
+      cell.style.animationDelay = `${stagger}ms`;
+      stagger += 8;
       gridEl.appendChild(cell);
     }
 

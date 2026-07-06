@@ -1,4 +1,5 @@
 import { formatDuration } from '../utils.js';
+import { setPlayPauseIcon } from '../icons.js';
 
 let elapsed = 0;
 let running = false;
@@ -21,15 +22,10 @@ export function initStopwatch() {
 
   function setPlayBtn(btn, isRunning, hasStarted) {
     if (!btn) return;
-    if (isRunning) {
-      btn.textContent = '⏸';
-      btn.setAttribute('aria-label', 'Pause');
-      btn.title = 'Pause';
-    } else {
-      btn.textContent = '▶';
-      const label = hasStarted ? 'Resume' : 'Start';
-      btn.setAttribute('aria-label', label);
-      btn.title = label;
+    setPlayPauseIcon(btn, isRunning);
+    if (!isRunning && hasStarted) {
+      btn.setAttribute('aria-label', 'Resume');
+      btn.title = 'Resume';
     }
   }
 

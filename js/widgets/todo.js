@@ -1,5 +1,7 @@
 import * as persistence from '../persistence.js';
 import { readFileAsText } from '../utils.js';
+import { iconSvg } from '../icons.js';
+import { enhanceSelect } from '../custom-select.js';
 
 /** @typedef {{id:string,text:string,done:boolean,priority:'low'|'medium'|'high',tags:string[]}} Todo */
 
@@ -23,17 +25,46 @@ export function initTodo() {
   const exportBtn = el.querySelector('.todo-export');
   const importBtn = el.querySelector('.todo-import');
   const importFile = el.querySelector('.todo-import-file');
+  const countBadge = el.querySelector('.todo-count-badge');
+
+  if (prioritySelect instanceof HTMLSelectElement) enhanceSelect(prioritySelect);
+
+  function updateBadge() {
+    const todos = getTodos();
+    const done = todos.filter((t) => t.done).length;
+    if (countBadge) {
+      countBadge.textContent = todos.length ? `${done}/${todos.length}` : '';
+    }
+  }
 
   function render() {
     if (!listEl) return;
     listEl.innerHTML = '';
-    getTodos().forEach((todo) => {
+    const todos = getTodos();
+
+    if (!todos.length) {
+      listEl.innerHTML = `
+        <div class="todo-empty">
+          <span class="todo-empty-icon">${iconSvg('list-todo', 36)}</span>
+          <span class="todo-empty-text">No tasks yet</span>
+        </div>
+      `;
+      updateBadge();
+      return;
+    }
+
+    todos.forEach((todo) => {
       const item = document.createElement('div');
       item.className = `todo-item priority-${todo.priority}${todo.done ? ' is-done' : ''}`;
       item.innerHTML = `
+        <span class="todo-drag-handle" aria-hidden="true">${iconSvg('grip-vertical', 14)}</span>
         <label class="todo-check">
           <input type="checkbox" ${todo.done ? 'checked' : ''} data-id="${todo.id}">
-          <span class="checkmark"></span>
+          <span class="check-circle">
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+              <path class="check-path" d="M2 6l3 3 5-5"/>
+            </svg>
+          </span>
         </label>
         <span class="todo-text">${esc(todo.text)}</span>
         <span class="todo-tags-list">${todo.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</span>
@@ -57,6 +88,8 @@ export function initTodo() {
         render();
       });
     });
+
+    updateBadge();
   }
 
   addBtn?.addEventListener('click', addTask);

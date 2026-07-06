@@ -1,3 +1,4 @@
+import { crossfadeBlur } from '../motion.js';
 import { getGreeting } from '../utils.js';
 
 const QUOTES = [
@@ -34,11 +35,7 @@ export function initGreeting() {
   setInterval(() => {
     quoteIndex = (quoteIndex + 1) % QUOTES.length;
     if (quoteEl) {
-      quoteEl.style.opacity = '0';
-      setTimeout(() => {
-        update();
-        quoteEl.style.opacity = '1';
-      }, 400);
+      crossfadeBlur(quoteEl, update);
     }
   }, 30000);
 
