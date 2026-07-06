@@ -237,12 +237,29 @@ export function getAll() {
 
 /**
  * @param {Record<string, unknown>} data
+ * @param {{ notifyEachKey?: boolean }} [options]
  */
-export function mergeAll(data) {
-  if (!data || typeof data !== 'object') return;
+export function mergeAll(data, options = {}) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return;
+  /** @type {string[]} */
+  const keys = [];
   Object.entries(data).forEach(([key, value]) => {
-    if (value !== undefined) memoryStore.set(key, value);
+    if (value !== undefined) {
+      memoryStore.set(key, value);
+      keys.push(key);
+    }
   });
+  if (options.notifyEachKey) {
+    keys.forEach((key) => {
+      listeners.forEach((fn) => {
+        try {
+          fn(key, memoryStore.get(key));
+        } catch {
+          /* noop */
+        }
+      });
+    });
+  }
   listeners.forEach((fn) => {
     try {
       fn('*', getAll());
@@ -254,10 +271,12 @@ export function mergeAll(data) {
 }
 
 /**
- * Build a complete portable state object: defaults + store + live DOM snapshot.
+ * Build a complete portable state object: defaults + store + optional live DOM snapshot.
+ * @param {{ captureLive?: boolean, syncLiveToMemory?: boolean }} [options]
  * @returns {Record<string, unknown>}
  */
-export function buildExportState() {
+export function buildExportState(options = {}) {
+  const { captureLive = false, syncLiveToMemory = false } = options;
   const full = cloneState(DEFAULT_STATE);
 
   for (const [key, value] of memoryStore) {
@@ -265,25 +284,29 @@ export function buildExportState() {
     full[key] = cloneState(value);
   }
 
-  if (snapshotProvider) {
+  if (captureLive && snapshotProvider) {
     const live = snapshotProvider();
     Object.assign(full, live);
-    Object.entries(live).forEach(([key, value]) => {
-      if (!EXPORT_META_KEYS.has(key) && !INTERNAL_KEYS.has(key)) {
-        memoryStore.set(key, cloneState(value));
-      }
-    });
+    if (syncLiveToMemory) {
+      Object.entries(live).forEach(([key, value]) => {
+        if (!EXPORT_META_KEYS.has(key) && !INTERNAL_KEYS.has(key)) {
+          memoryStore.set(key, cloneState(value));
+        }
+      });
+    }
   }
 
-  full.exportVersion = 1;
-  full.exportedAt = new Date().toISOString();
-  full.app = 'aurora-desk';
+  if (captureLive) {
+    full.exportVersion = 1;
+    full.exportedAt = new Date().toISOString();
+    full.app = 'aurora-desk';
+  }
 
   return full;
 }
 
 /**
- * Export full state as JSON string.
+ * Export full state as JSON string (memory only — does not overwrite from DOM).
  * @returns {string}
  */
 export function exportJSON() {
@@ -298,13 +321,13 @@ export function exportJSON() {
 export function importJSON(json) {
   try {
     const data = JSON.parse(json);
-    if (!data || typeof data !== 'object') return false;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
 
     const cleaned = { ...data };
     EXPORT_META_KEYS.forEach((key) => delete cleaned[key]);
     INTERNAL_KEYS.forEach((key) => delete cleaned[key]);
 
-    mergeAll(cleaned);
+    mergeAll(cleaned, { notifyEachKey: true });
     scheduleLivelySync();
     return true;
   } catch {
@@ -317,7 +340,12 @@ export function importJSON(json) {
  * @param {string} [filename]
  */
 export function downloadExport(filename = 'aurora-desk-state.json') {
-  const blob = new Blob([exportJSON()], { type: 'application/json' });
+  const json = JSON.stringify(
+    buildExportState({ captureLive: true, syncLiveToMemory: true }),
+    null,
+    2,
+  );
+  const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

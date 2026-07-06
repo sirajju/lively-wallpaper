@@ -258,61 +258,114 @@
       <h2>Settings</h2>
       <button class="icon-btn settings-close" aria-label="Close settings">×</button>
     </header>
+
+    <nav class="settings-tabs" role="tablist" aria-label="Settings sections">
+      <button type="button" class="settings-tab is-active" role="tab" data-tab="look" aria-selected="true">Look</button>
+      <button type="button" class="settings-tab" role="tab" data-tab="widgets" aria-selected="false">Widgets</button>
+      <button type="button" class="settings-tab" role="tab" data-tab="data" aria-selected="false">Data</button>
+    </nav>
+
     <div class="settings-body">
-      <section class="settings-section">
-        <h3>Appearance</h3>
-        <label>Accent <input id="set-accent" type="color" value="#8B5CF6"></label>
-        <label>Glass Opacity <input id="set-opacity" type="range" min="10" max="100" value="22"></label>
-        <label>Blur <input id="set-blur" type="range" min="4" max="40" value="24"></label>
-        <label>Widget Scale <input id="set-scale" type="range" min="80" max="120" value="100"></label>
-        <label>Animation Speed <input id="set-anim-speed" type="range" min="25" max="200" value="100"></label>
-        <label>Background
-          <select id="set-background"></select>
-        </label>
-        <label>Font
-          <select id="set-font">
-            <option value="system">System</option>
-            <option value="inter">Inter</option>
-            <option value="georgia">Georgia</option>
-            <option value="mono">Monospace</option>
-          </select>
-        </label>
-      </section>
-      <section class="settings-section">
-        <h3>Preferences</h3>
-        <label class="check-label"><input id="set-time-24" type="checkbox"> 24-hour time</label>
-        <label class="check-label"><input id="set-focus" type="checkbox"> Focus mode</label>
-        <label>Temperature
-          <select id="set-units">
-            <option value="celsius">Celsius</option>
-            <option value="fahrenheit">Fahrenheit</option>
-          </select>
-        </label>
-      </section>
-      <section class="settings-section">
-        <h3>Ambient</h3>
-        <label>Sound <select id="set-ambient"></select></label>
-        <label>Volume <input id="set-ambient-vol" type="range" min="0" max="100" value="30"></label>
-      </section>
-      <section class="settings-section">
-        <h3>Widgets</h3>
-        <p class="settings-hint">Toggle visibility, pick a size, and tap the gear icon for widget-specific settings.</p>
-        <div class="btn-row reset-row">
-          <button class="btn-icon btn-ghost" id="reset-layout" aria-label="Reset layout" title="Reset layout">↺</button>
+      <!-- Look: appearance + prefs + ambient — single screen, no scroll -->
+      <div class="settings-page is-active" data-page="look" role="tabpanel">
+        <div class="settings-grid settings-grid--look">
+          <div class="settings-block">
+            <h3>Appearance</h3>
+            <label class="settings-field settings-field--color">
+              <span>Accent</span>
+              <input id="set-accent" type="color" value="#8B5CF6">
+            </label>
+            <label class="settings-field settings-field--range">
+              <span>Glass</span>
+              <input id="set-opacity" type="range" min="10" max="100" value="22">
+            </label>
+            <label class="settings-field settings-field--range">
+              <span>Blur</span>
+              <input id="set-blur" type="range" min="4" max="40" value="24">
+            </label>
+            <label class="settings-field settings-field--range">
+              <span>Scale</span>
+              <input id="set-scale" type="range" min="80" max="120" value="100">
+            </label>
+            <label class="settings-field settings-field--range">
+              <span>Motion</span>
+              <input id="set-anim-speed" type="range" min="25" max="200" value="100">
+            </label>
+          </div>
+
+          <div class="settings-block">
+            <h3>Scene</h3>
+            <label class="settings-field">
+              <span>Background</span>
+              <select id="set-background"></select>
+            </label>
+            <label class="settings-field">
+              <span>Font</span>
+              <select id="set-font">
+                <option value="system">System</option>
+                <option value="inter">Inter</option>
+                <option value="georgia">Georgia</option>
+                <option value="mono">Monospace</option>
+              </select>
+            </label>
+            <h3 class="settings-subhead">Preferences</h3>
+            <div class="settings-checks">
+              <label class="settings-check"><input id="set-time-24" type="checkbox"> 24-hour</label>
+              <label class="settings-check"><input id="set-focus" type="checkbox"> Focus mode</label>
+            </div>
+            <label class="settings-field">
+              <span>Temperature</span>
+              <select id="set-units">
+                <option value="celsius">Celsius</option>
+                <option value="fahrenheit">Fahrenheit</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="settings-block">
+            <h3>Ambient</h3>
+            <label class="settings-field">
+              <span>Sound</span>
+              <select id="set-ambient"></select>
+            </label>
+            <label class="settings-field settings-field--range">
+              <span>Volume</span>
+              <input id="set-ambient-vol" type="range" min="0" max="100" value="30">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widgets: paginated grid — no scroll -->
+      <div class="settings-page" data-page="widgets" role="tabpanel" hidden>
+        <div class="widgets-toolbar">
+          <button type="button" class="btn-icon btn-ghost" id="reset-layout" aria-label="Reset layout" title="Reset layout">↺</button>
+          <p class="settings-hint widgets-toolbar-hint">Toggle · size · gear for widget options</p>
+          <div class="widgets-pager">
+            <button type="button" class="btn-icon btn-ghost widgets-page-prev" aria-label="Previous widgets page" title="Previous">‹</button>
+            <span class="widgets-page-label" aria-live="polite">1 / 2</span>
+            <button type="button" class="btn-icon btn-ghost widgets-page-next" aria-label="Next widgets page" title="Next">›</button>
+          </div>
         </div>
         <div class="widget-toggles"></div>
-      </section>
-      <section class="settings-section">
-        <h3>Data</h3>
-        <div class="btn-row">
-          <button class="btn-icon btn-primary" id="export-state" aria-label="Export all settings" title="Export all">⬇</button>
-          <button class="btn-icon btn-ghost" id="import-state" aria-label="Import settings" title="Import">⬆</button>
-          <input id="import-state-file" type="file" accept=".json" hidden>
+      </div>
+
+      <!-- Data: import / export -->
+      <div class="settings-page" data-page="data" role="tabpanel" hidden>
+        <div class="data-panel">
+          <h3>Backup &amp; restore</h3>
+          <p class="settings-hint">Exports layout, widget data, and all settings. In Lively, paste into Saved State.</p>
+          <div class="btn-row data-actions">
+            <button type="button" class="btn-icon btn-primary" id="export-state" aria-label="Export all settings" title="Export all">⬇</button>
+            <label class="btn-icon btn-ghost" id="import-state" for="import-state-file" aria-label="Import settings" title="Import">⬆</label>
+          </div>
+          <p id="import-status" class="settings-hint import-status" role="status" aria-live="polite"></p>
         </div>
-        <p class="settings-hint">Exports layout, widget data, and all settings. In Lively, paste into Saved State.</p>
-      </section>
+      </div>
     </div>
   </aside>
+
+  <input id="import-state-file" type="file" accept="application/json,.json" class="file-input-sr" tabindex="-1" aria-hidden="true">
 
   <script type="module" src="script.js"></script>
 </body>

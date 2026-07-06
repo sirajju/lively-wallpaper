@@ -34,6 +34,11 @@ const WIDGETS = [
   'worldclock', 'events', 'radar', 'rss', 'motivation',
 ];
 
+const WIDGETS_PER_PAGE = 9;
+
+/** @type {number} */
+let widgetPage = 0;
+
 export function initSettings() {
   const panel = document.getElementById('settings-panel');
   const toggle = document.getElementById('settings-toggle');
@@ -52,6 +57,7 @@ export function initSettings() {
     panel.classList.remove('is-open');
     backdrop?.classList.remove('is-open');
     panel.setAttribute('aria-hidden', 'true');
+    closeWidgetPopover();
   }
 
   toggle.addEventListener('click', () => {
@@ -66,6 +72,8 @@ export function initSettings() {
     if (e.key === 'Escape') closePanel();
   });
 
+  initSettingsTabs(panel);
+  initWidgetPager(panel);
   bindControls(panel);
   applySettings();
   buildWidgetCards(panel);
@@ -78,6 +86,46 @@ export function initSettings() {
     if (key === '*' || WIDGET_SETTING_KEYS.has(key)) {
       refreshOpenWidgetPopover();
     }
+  });
+}
+
+function initSettingsTabs(panel) {
+  const tabs = panel.querySelectorAll('.settings-tab');
+  const pages = panel.querySelectorAll('.settings-page');
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const id = tab.getAttribute('data-tab');
+      if (!id) return;
+
+      tabs.forEach((t) => {
+        const active = t === tab;
+        t.classList.toggle('is-active', active);
+        t.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+
+      pages.forEach((page) => {
+        const active = page.getAttribute('data-page') === id;
+        page.classList.toggle('is-active', active);
+        page.hidden = !active;
+      });
+    });
+  });
+}
+
+function initWidgetPager(panel) {
+  const prev = panel.querySelector('.widgets-page-prev');
+  const next = panel.querySelector('.widgets-page-next');
+
+  prev?.addEventListener('click', () => {
+    widgetPage = Math.max(0, widgetPage - 1);
+    buildWidgetCards(panel);
+  });
+
+  next?.addEventListener('click', () => {
+    const maxPage = Math.ceil(WIDGETS.length / WIDGETS_PER_PAGE) - 1;
+    widgetPage = Math.min(maxPage, widgetPage + 1);
+    buildWidgetCards(panel);
   });
 }
 
@@ -125,17 +173,30 @@ function bindControls(panel) {
     resetPositions();
   });
 
-  const importFile = panel.querySelector('#import-state-file');
-  panel.querySelector('#import-state')?.addEventListener('click', () => importFile?.click());
+  const importFile = document.getElementById('import-state-file');
   importFile?.addEventListener('change', async () => {
     const file = importFile.files?.[0];
+    const status = document.getElementById('import-status');
     if (!file) return;
-    const ok = persistence.importJSON(await readFileAsText(file));
-    if (ok) {
+    try {
+      const ok = persistence.importJSON(await readFileAsText(file));
+      if (!ok) {
+        if (status) status.textContent = 'Import failed — choose a valid Aurora Desk JSON file.';
+        return;
+      }
       applySettings();
       applySavedPositions();
+      if (status) {
+        status.textContent = 'Import applied successfully.';
+        window.setTimeout(() => {
+          if (status.textContent === 'Import applied successfully.') status.textContent = '';
+        }, 3000);
+      }
+    } catch {
+      if (status) status.textContent = 'Could not read that file.';
+    } finally {
+      importFile.value = '';
     }
-    importFile.value = '';
   });
 
   if (ambient) {
@@ -221,17 +282,33 @@ function buildWidgetCards(panel) {
   const container = panel.querySelector('.widget-toggles');
   if (!container) return;
 
+  const pageCount = Math.ceil(WIDGETS.length / WIDGETS_PER_PAGE);
+  widgetPage = Math.min(widgetPage, Math.max(0, pageCount - 1));
+
+  const label = panel.querySelector('.widgets-page-label');
+  if (label) label.textContent = `${widgetPage + 1} / ${pageCount}`;
+
+  const prev = panel.querySelector('.widgets-page-prev');
+  const next = panel.querySelector('.widgets-page-next');
+  if (prev) prev.disabled = widgetPage <= 0;
+  if (next) next.disabled = widgetPage >= pageCount - 1;
+
+  const slice = WIDGETS.slice(
+    widgetPage * WIDGETS_PER_PAGE,
+    widgetPage * WIDGETS_PER_PAGE + WIDGETS_PER_PAGE,
+  );
+
   const hidden = new Set(persistence.get('hiddenWidgets', []));
   const sizeOptions = getSizeOptions();
   container.innerHTML = '';
 
-  WIDGETS.forEach((id) => {
-    const row = document.createElement('div');
-    row.className = 'widget-row';
+  slice.forEach((id) => {
+    const cell = document.createElement('div');
+    cell.className = 'widget-cell';
 
-    const label = document.createElement('label');
-    label.className = 'widget-toggle';
-    label.innerHTML = `
+    const labelEl = document.createElement('label');
+    labelEl.className = 'widget-toggle';
+    labelEl.innerHTML = `
       <input type="checkbox" data-widget-toggle="${id}" ${hidden.has(id) ? '' : 'checked'}>
       <span>${id.replace(/-/g, ' ')}</span>
     `;
@@ -265,12 +342,12 @@ function buildWidgetCards(panel) {
       settingsBtn.setAttribute('aria-label', `Settings for ${id}`);
       settingsBtn.title = 'Widget settings';
       settingsBtn.innerHTML = '';
-      setIcon(settingsBtn, 'settings', 16);
+      setIcon(settingsBtn, 'settings', 14);
       controls.appendChild(settingsBtn);
     }
 
-    row.append(label, controls);
-    container.appendChild(row);
+    cell.append(labelEl, controls);
+    container.appendChild(cell);
   });
 
   container.querySelectorAll('[data-widget-toggle]').forEach((input) => {

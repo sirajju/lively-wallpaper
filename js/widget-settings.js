@@ -73,6 +73,14 @@ function hint(text) {
   return p;
 }
 
+/** Max list rows shown in widget popovers (no scroll in Lively). */
+const LIST_PREVIEW_MAX = 3;
+
+function listPreviewHint(total) {
+  if (total <= LIST_PREVIEW_MAX) return null;
+  return hint(`Showing ${LIST_PREVIEW_MAX} of ${total}. Use the widget for the full list.`);
+}
+
 function escapeHtml(str) {
   const d = document.createElement('div');
   d.textContent = str;
@@ -121,15 +129,18 @@ function renderWorldClock(container) {
 
   function paint() {
     const zones = /** @type {string[]} */ (persistence.get('worldClocks', []));
-    list.innerHTML = zones
-      .map(
-        (tz) => `
+    const preview = zones.slice(0, LIST_PREVIEW_MAX);
+    list.innerHTML = preview.length
+      ? preview
+          .map(
+            (tz) => `
         <li class="widget-setting-list-item">
           <span>${escapeHtml(CITY_LABELS[tz] || tz)}</span>
           <button class="icon-btn" data-tz="${escapeHtml(tz)}" aria-label="Remove" title="Remove">×</button>
         </li>`
-      )
-      .join('');
+          )
+          .join('')
+      : '<li class="settings-hint">No cities yet.</li>';
 
     list.querySelectorAll('button[data-tz]').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -165,7 +176,9 @@ function renderWorldClock(container) {
   row.append(select, addBtn);
 
   paint();
+  const more = listPreviewHint(/** @type {string[]} */ (persistence.get('worldClocks', [])).length);
   container.append(list, row);
+  if (more) container.append(more);
 }
 
 function renderRss(container) {
@@ -234,7 +247,7 @@ function renderRss(container) {
       feedList.innerHTML = '<li class="settings-hint">No feeds yet.</li>';
       return;
     }
-    feeds.forEach((feed, i) => {
+    feeds.slice(0, LIST_PREVIEW_MAX).forEach((feed, i) => {
       const li = document.createElement('li');
       li.className = 'rss-feed-item';
       li.innerHTML = `
@@ -282,6 +295,9 @@ function renderRss(container) {
 
   paintFeeds();
   container.append(form, feedList);
+  const feedCount = /** @type {unknown[]} */ (persistence.get('rssFeeds', [])).length;
+  const more = listPreviewHint(feedCount);
+  if (more) container.append(more);
 }
 
 function renderWeather(container) {
@@ -301,8 +317,9 @@ function renderCountdown(container) {
     const items = /** @type {{ id: string, label: string, target: string }[]} */ (
       persistence.get('countdowns', [])
     );
-    list.innerHTML = items.length
-      ? items
+    const preview = items.slice(0, LIST_PREVIEW_MAX);
+    list.innerHTML = preview.length
+      ? preview
           .map(
             (cd) => `
           <li class="widget-setting-list-item">
@@ -324,7 +341,9 @@ function renderCountdown(container) {
   }
 
   paint();
+  const more = listPreviewHint(/** @type {unknown[]} */ (persistence.get('countdowns', [])).length);
   container.append(list, hint('Add new countdowns from the Countdown widget.'));
+  if (more) container.append(more);
 }
 
 function renderEvents(container) {
@@ -335,8 +354,9 @@ function renderEvents(container) {
     const items = /** @type {{ id: string, title: string, date: string, time?: string }[]} */ (
       persistence.get('events', [])
     );
-    list.innerHTML = items.length
-      ? items
+    const preview = items.slice(0, LIST_PREVIEW_MAX);
+    list.innerHTML = preview.length
+      ? preview
           .map(
             (ev) => `
           <li class="widget-setting-list-item">
@@ -358,7 +378,9 @@ function renderEvents(container) {
   }
 
   paint();
+  const more = listPreviewHint(/** @type {unknown[]} */ (persistence.get('events', [])).length);
   container.append(list, hint('Add new events from the Agenda widget.'));
+  if (more) container.append(more);
 }
 
 function renderTodo(container) {

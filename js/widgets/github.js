@@ -76,10 +76,11 @@ export function initGitHub() {
     if (e.key === 'Enter') load(userInput.value.trim());
   });
 
-  persistence.subscribe((key, val) => {
-    if (key === 'githubUsername' && val) {
-      if (userInput) userInput.value = String(val);
-      load(String(val));
+  persistence.subscribe((key) => {
+    if (key === 'githubUsername') {
+      const name = String(persistence.get('githubUsername', ''));
+      if (userInput) userInput.value = name;
+      if (name) load(name);
     }
   });
 
