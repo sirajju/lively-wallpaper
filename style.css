@@ -25,9 +25,13 @@
   --glass-border-bottom: hsla(var(--accent-h), 40%, 20%, 0.12);
   --glass-noise-opacity: 0.035;
   --glass-shadow: 0 20px 60px -15px hsla(var(--accent-h), 60%, 20%, 0.35), 0 2px 6px hsla(0, 0%, 0%, 0.08);
-  --shadow-ambient: 0 20px 60px -15px hsla(var(--accent-h), 60%, 20%, 0.35);
-  --shadow-contact: 0 2px 6px hsla(0, 0%, 0%, 0.08);
-  --shadow-glow: 0 0 40px -8px hsla(var(--accent-h), 90%, 65%, 0.35);
+  --shadow-ambient: 0 24px 70px -18px hsla(var(--accent-h), 55%, 18%, 0.45);
+  --shadow-contact: 0 3px 10px hsla(var(--accent-h), 30%, 12%, 0.12);
+  --shadow-glow: 0 0 44px -8px hsla(var(--accent-h), 90%, 65%, 0.4);
+  --glass-sheen:
+    linear-gradient(155deg, hsla(0, 0%, 100%, 0.18), hsla(0, 0%, 100%, 0) 42%),
+    radial-gradient(130% 90% at 12% -10%, hsla(0, 0%, 100%, 0.16), transparent 55%);
+  --glass-rim: inset 0 0 0 1px hsla(0, 0%, 100%, 0.07);
   --radius-xs: 12px;
   --radius-sm: 18px;
   --radius-md: 24px;
@@ -235,14 +239,15 @@ body.focus-mode .widget[data-widget="todo"] {
   position: absolute;
   z-index: 5;
   cursor: grab;
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  background: var(--glass-sheen), var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.02);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.02);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   box-shadow:
     var(--shadow-ambient),
     var(--shadow-contact),
+    var(--glass-rim),
     inset 0 1px 0 var(--glass-border-top),
     inset 0 -1px 0 var(--glass-border-bottom);
   padding: clamp(16px, 1.5vw, 24px);
@@ -277,6 +282,7 @@ body.focus-mode .widget[data-widget="todo"] {
     var(--shadow-ambient),
     var(--shadow-glow),
     var(--shadow-contact),
+    var(--glass-rim),
     inset 0 1px 0 var(--glass-border-top),
     inset 0 -1px 0 var(--glass-border-bottom);
 }
@@ -412,6 +418,18 @@ body.focus-mode .widget[data-widget="todo"] {
 }
 
 .clock-time {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.12em;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  position: relative;
+  padding-right: 0.08em;
+}
+
+/* Hero hours:minutes — the glanceable value */
+.clock-hm {
   font: var(--font-display-xl);
   letter-spacing: -0.03em;
   line-height: 1;
@@ -420,8 +438,54 @@ body.focus-mode .widget[data-widget="todo"] {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-variant-numeric: tabular-nums;
-  position: relative;
 }
+
+.clock-colon {
+  display: inline-block;
+  padding: 0 0.04em;
+  color: var(--w-accent, var(--accent));
+  -webkit-text-fill-color: var(--w-accent, var(--accent));
+  animation: colon-blink 2s ease-in-out infinite;
+}
+
+@keyframes colon-blink {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.45; }
+}
+
+/* Seconds — de-emphasised, dim accent, sits below the cap line */
+.clock-sec {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.15rem;
+  letter-spacing: 0.01em;
+  color: var(--w-accent, var(--accent));
+  opacity: 0.55;
+  align-self: baseline;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock-sec.is-tick {
+  animation: sec-tick 0.5s ease;
+}
+
+@keyframes sec-tick {
+  0% { opacity: 0.18; transform: translateY(-2px); }
+  100% { opacity: 0.55; transform: translateY(0); }
+}
+
+/* Meridiem — small raised uppercase label */
+.clock-mer {
+  font: var(--font-label);
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  color: var(--w-accent, var(--accent));
+  opacity: 0.75;
+  align-self: flex-start;
+  margin-top: 0.15em;
+}
+
+.clock-mer[hidden] { display: none; }
 
 .clock-time.is-minute-pulse::after {
   content: "";
@@ -443,14 +507,16 @@ body.focus-mode .widget[data-widget="todo"] {
 }
 
 .clock-digit.is-ticking {
-  animation: digit-flip 0.35s ease;
+  animation: digit-flip 0.4s var(--spring);
 }
 
+/* Minutes/hours change rarely, so a fuller flip is fine here (never mid-frame
+   on the fast-moving seconds, which use the gentler sec-tick above). */
 @keyframes digit-flip {
-  0% { transform: translateY(0); opacity: 1; }
-  45% { transform: translateY(-40%); opacity: 0; }
-  55% { transform: translateY(40%); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
+  0% { transform: translateY(0) rotateX(0); opacity: 1; }
+  40% { transform: translateY(-45%) rotateX(-55deg); opacity: 0; }
+  60% { transform: translateY(38%) rotateX(55deg); opacity: 0; }
+  100% { transform: translateY(0) rotateX(0); opacity: 1; }
 }
 
 .clock-day {
@@ -485,8 +551,6 @@ body.focus-mode .widget[data-widget="todo"] {
   width: max-content;
   max-width: min(600px, calc(100vw - 40px));
 }
-
-.clock-time { white-space: nowrap; }
 
 .greeting-quote {
   margin-top: 12px;
@@ -535,6 +599,8 @@ body.focus-mode .widget[data-widget="todo"] {
 
 .weather-temp {
   font: var(--font-display-lg);
+  font-size: 2.15rem;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   background: linear-gradient(
     135deg,
@@ -562,10 +628,11 @@ body.focus-mode .widget[data-widget="todo"] {
 .weather-details {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: 8px 14px;
   font-size: 0.8rem;
   color: var(--text-secondary);
-  margin-top: 8px;
+  margin-top: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .cal-grid {
@@ -698,22 +765,44 @@ body.focus-mode .widget[data-widget="todo"] {
 .pomo-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 14px;
   align-items: center;
   justify-content: center;
 }
 
 .inline-label {
-  font-size: 0.75rem;
+  font: var(--font-label);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--text-secondary);
-  display: flex;
+  display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .inline-label input {
-  width: 48px;
-  padding: 6px 8px;
+  width: 56px;
+  padding: 6px 4px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Kill native number spinners — replaced by clean centered pills */
+.widget input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.widget input[type="number"]::-webkit-inner-spin-button,
+.widget input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .sw-time {
@@ -733,12 +822,26 @@ body.focus-mode .widget[data-widget="todo"] {
   font-variant-numeric: tabular-nums;
 }
 
-.countdown-form, .todo-form, .events-form, .gh-form, .wc-form {
+.countdown-form, .events-form, .gh-form, .wc-form {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 10px;
 }
+
+/* Tasks: task input on its own row, then priority + tags + add aligned below */
+.todo-form {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.todo-form .todo-input { grid-column: 1 / -1; }
+.todo-form .custom-select { grid-column: 1; }
+.todo-form .todo-tags { grid-column: 2; min-width: 0; }
+.todo-form .todo-add { grid-column: 3; }
 
 .countdown-item, .event-item {
   display: flex;
@@ -1634,7 +1737,7 @@ body[data-bg-mode="space"] {
   --glass-border: rgba(255, 255, 255, 0.15);
 }
 
-body[data-bg-mode="cyberpunk"] .clock-time {
+body[data-bg-mode="cyberpunk"] .clock-hm {
   background: linear-gradient(135deg, #F472B6, #22D3EE);
   -webkit-background-clip: text;
   background-clip: text;

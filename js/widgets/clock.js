@@ -2,25 +2,32 @@ import { formatTime } from '../utils.js';
 import * as persistence from '../persistence.js';
 
 /**
- * @param {HTMLElement} container
- * @param {string} newText
- * @param {string} [prevText]
+ * Build per-digit spans for the hours:minutes group, flipping only the
+ * characters that changed since the previous render.
+ * @param {string} text e.g. "04:10"
+ * @param {string} prevText
+ * @returns {DocumentFragment}
  */
-function renderFlipTime(container, newText, prevText) {
-  if (!container) return;
-  const groups = newText.split(/(:|\s)/);
-  const prevGroups = (prevText || '').split(/(:|\s)/);
-
-  container.innerHTML = '';
-  groups.forEach((ch, i) => {
+function buildHmDigits(text, prevText) {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === ':') {
+      const colon = document.createElement('span');
+      colon.className = 'clock-colon';
+      colon.textContent = ':';
+      frag.appendChild(colon);
+      continue;
+    }
     const span = document.createElement('span');
     span.className = 'clock-digit';
     span.textContent = ch;
-    if (prevGroups[i] !== undefined && prevGroups[i] !== ch && ch !== ':' && ch.trim()) {
+    if (prevText && prevText[i] !== undefined && prevText[i] !== ch) {
       span.classList.add('is-ticking');
     }
-    container.appendChild(span);
-  });
+    frag.appendChild(span);
+  }
+  return frag;
 }
 
 export function initClock() {
@@ -30,23 +37,58 @@ export function initClock() {
   const timeEl = el.querySelector('.clock-time');
   const dateEl = el.querySelector('.clock-date');
   const dayEl = el.querySelector('.clock-day');
-  let prevTime = '';
+
+  let hmEl;
+  let secEl;
+  let merEl;
+  if (timeEl) {
+    timeEl.textContent = '';
+    hmEl = document.createElement('span');
+    hmEl.className = 'clock-hm';
+    secEl = document.createElement('span');
+    secEl.className = 'clock-sec';
+    merEl = document.createElement('span');
+    merEl.className = 'clock-mer';
+    timeEl.append(hmEl, secEl, merEl);
+  }
+
+  let prevHM = '';
+  let prevSec = '';
   let prevMinute = -1;
 
   function tick() {
     const now = new Date();
     const use24 = Boolean(persistence.get('timeFormat24', false));
-    const timeStr = formatTime(now, use24);
+    const raw = formatTime(now, use24); // "04:10:48 PM" or "16:10:48"
+    const [clockPart, meridiem = ''] = raw.split(' ');
+    const segments = clockPart.split(':');
+    const hm = segments.slice(0, 2).join(':');
+    const sec = segments[2] || '';
 
-    if (timeEl) {
-      renderFlipTime(timeEl, timeStr, prevTime);
-      prevTime = timeStr;
+    if (hmEl && hm !== prevHM) {
+      hmEl.innerHTML = '';
+      hmEl.appendChild(buildHmDigits(hm, prevHM));
+      prevHM = hm;
+    }
 
-      if (now.getMinutes() !== prevMinute) {
-        prevMinute = now.getMinutes();
-        timeEl.classList.add('is-minute-pulse');
-        setTimeout(() => timeEl.classList.remove('is-minute-pulse'), 1200);
-      }
+    if (secEl && sec !== prevSec) {
+      secEl.textContent = sec;
+      secEl.classList.remove('is-tick');
+      // Force reflow so the tick animation restarts each second.
+      void secEl.offsetWidth;
+      secEl.classList.add('is-tick');
+      prevSec = sec;
+    }
+
+    if (merEl) {
+      merEl.textContent = meridiem;
+      merEl.hidden = !meridiem;
+    }
+
+    if (timeEl && now.getMinutes() !== prevMinute) {
+      prevMinute = now.getMinutes();
+      timeEl.classList.add('is-minute-pulse');
+      setTimeout(() => timeEl.classList.remove('is-minute-pulse'), 1200);
     }
 
     if (dateEl) {
@@ -60,7 +102,11 @@ export function initClock() {
   }
 
   persistence.subscribe((key) => {
-    if (key === 'timeFormat24') tick();
+    if (key === 'timeFormat24') {
+      prevHM = '';
+      prevSec = '';
+      tick();
+    }
   });
 
   tick();
