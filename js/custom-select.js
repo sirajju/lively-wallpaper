@@ -37,7 +37,12 @@ function ensureDocumentListeners() {
 function pruneOrphanPopovers() {
   document.querySelectorAll('.custom-select-popover[data-select-id]').forEach((pop) => {
     const id = pop.getAttribute('data-select-id');
-    if (!id || !document.getElementById(id)) pop.remove();
+    if (!id || !document.getElementById(id)) {
+      for (const inst of openInstances) {
+        if (inst.popover === pop) openInstances.delete(inst);
+      }
+      pop.remove();
+    }
   });
 }
 
@@ -77,8 +82,6 @@ export function enhanceSelect(select) {
   popover.setAttribute('data-select-id', select.id);
   popover.hidden = true;
   document.body.appendChild(popover);
-
-  let ignoreOutsideClose = false;
 
   /** @type {{ wrap: HTMLElement, popover: HTMLElement, close: () => void, positionPopover: () => void }} */
   const instance = {
@@ -177,15 +180,8 @@ export function enhanceSelect(select) {
   btn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (popover.hidden) {
-      ignoreOutsideClose = true;
-      open();
-      window.setTimeout(() => {
-        ignoreOutsideClose = false;
-      }, 0);
-    } else {
-      close();
-    }
+    if (popover.hidden) open();
+    else close();
   });
 
   wrap.append(btn);
