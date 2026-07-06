@@ -85,8 +85,19 @@ const EXPORT_META_KEYS = new Set(['exportVersion', 'exportedAt', 'app']);
 /** Internal / duplicate keys excluded from portable export. */
 const INTERNAL_KEYS = new Set(['savedState']);
 
+/** @type {((json: string) => void) | null} */
+let exportFallback = null;
+
 /** @type {(() => Record<string, unknown>) | null} */
 let snapshotProvider = null;
+
+/**
+ * Register UI fallback when clipboard copy fails (e.g. show manual copy dialog).
+ * @param {(json: string) => void} fn
+ */
+export function setExportFallback(fn) {
+  exportFallback = fn;
+}
 
 /**
  * Register a function that captures live DOM state before export.
@@ -336,22 +347,112 @@ export function importJSON(json) {
 }
 
 /**
- * Download state as a file (works in browser preview).
- * @param {string} [filename]
+ * Full export JSON string (live DOM + memory).
+ * @returns {string}
  */
-export function downloadExport(filename = 'aurora-desk-state.json') {
-  const json = JSON.stringify(
-    buildExportState({ captureLive: true, syncLiveToMemory: true }),
-    null,
-    2,
-  );
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+export function getExportText() {
+  try {
+    return JSON.stringify(
+      buildExportState({ captureLive: true, syncLiveToMemory: true }),
+      null,
+      2,
+    );
+  } catch {
+    return exportJSON();
+  }
+}
+
+/**
+ * Copy text using Clipboard API with execCommand fallback (WebView-safe).
+ * @param {string} text
+ * @returns {Promise<boolean>}
+ */
+export async function copyTextToClipboard(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* try fallback */
+  }
+
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Try to trigger a file download (works in browser; often blocked in Lively).
+ * @param {string} json
+ * @param {string} filename
+ * @returns {boolean}
+ */
+export function tryFileDownload(json, filename = 'aurora-desk-state.json') {
+  try {
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Export state — clipboard first (Lively), file download in browser preview.
+ * @param {string} [filename]
+ * @returns {Promise<{ json: string, copied: boolean, downloaded: boolean }>}
+ */
+export async function performExport(filename = 'aurora-desk-state.json') {
+  const json = getExportText();
+
+  if (typeof window.__livelyStateSync === 'function') {
+    window.__livelyStateSync(json);
+  }
+
+  const copied = await copyTextToClipboard(json);
+  const downloaded = !isLivelyEnvironment() && tryFileDownload(json, filename);
+
+  if (!copied && exportFallback) {
+    try {
+      exportFallback(json);
+    } catch {
+      /* UI fallback must not break export */
+    }
+  }
+
+  return { json, copied, downloaded };
+}
+
+/**
+ * Download / copy state (Lively-safe).
+ * @param {string} [filename]
+ * @returns {Promise<{ json: string, copied: boolean, downloaded: boolean }>}
+ */
+export async function downloadExport(filename = 'aurora-desk-state.json') {
+  return performExport(filename);
 }
 
 function scheduleLivelySync() {
@@ -465,7 +566,12 @@ export default {
   getAll,
   mergeAll,
   setSnapshotProvider,
+  setExportFallback,
   buildExportState,
+  getExportText,
+  copyTextToClipboard,
+  tryFileDownload,
+  performExport,
   exportJSON,
   importJSON,
   downloadExport,

@@ -114,8 +114,8 @@ export function initTodo() {
     render();
   }
 
-  exportBtn?.addEventListener('click', () => {
-    persistence.downloadExport('aurora-desk-state.json');
+  exportBtn?.addEventListener('click', async () => {
+    await persistence.performExport();
   });
 
   importBtn?.addEventListener('click', () => importFile?.click());

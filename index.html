@@ -354,16 +354,30 @@
       <div class="settings-page" data-page="data" role="tabpanel" hidden>
         <div class="data-panel">
           <h3>Backup &amp; restore</h3>
-          <p class="settings-hint">Exports layout, widget data, and all settings. In Lively, paste into Saved State.</p>
+          <p class="settings-hint">Export copies JSON to clipboard. In Lively, paste into <strong>Saved State</strong>.</p>
           <div class="btn-row data-actions">
             <button type="button" class="btn-icon btn-primary" id="export-state" aria-label="Export all settings" title="Export all">⬇</button>
             <label class="btn-icon btn-ghost" id="import-state" for="import-state-file" aria-label="Import settings" title="Import">⬆</label>
           </div>
-          <p id="import-status" class="settings-hint import-status" role="status" aria-live="polite"></p>
+          <p id="data-status" class="settings-hint import-status" role="status" aria-live="polite"></p>
         </div>
       </div>
     </div>
   </aside>
+
+  <div id="export-overlay" class="export-overlay" hidden aria-hidden="true">
+    <div class="export-dialog" role="dialog" aria-labelledby="export-dialog-title" aria-modal="true">
+      <header class="export-dialog-header">
+        <h3 id="export-dialog-title">Exported state</h3>
+        <button type="button" class="icon-btn export-dialog-close" aria-label="Close">×</button>
+      </header>
+      <p class="settings-hint">Select all and copy, then paste into Lively <strong>Saved State</strong>.</p>
+      <textarea id="export-json-output" class="export-json-output" readonly aria-label="Exported JSON"></textarea>
+      <div class="btn-row export-dialog-actions">
+        <button type="button" class="btn-icon btn-primary" id="export-copy-btn" aria-label="Copy JSON" title="Copy">⎘</button>
+      </div>
+    </div>
+  </div>
 
   <input id="import-state-file" type="file" accept="application/json,.json" class="file-input-sr" tabindex="-1" aria-hidden="true">
 

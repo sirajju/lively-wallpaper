@@ -166,7 +166,7 @@ function bindControls(panel) {
   });
 
   panel.querySelector('#export-state')?.addEventListener('click', () => {
-    persistence.downloadExport();
+    handleExport();
   });
 
   panel.querySelector('#reset-layout')?.addEventListener('click', () => {
@@ -176,7 +176,7 @@ function bindControls(panel) {
   const importFile = document.getElementById('import-state-file');
   importFile?.addEventListener('change', async () => {
     const file = importFile.files?.[0];
-    const status = document.getElementById('import-status');
+    const status = document.getElementById('data-status');
     if (!file) return;
     try {
       const ok = persistence.importJSON(await readFileAsText(file));
@@ -216,6 +216,75 @@ function bindControls(panel) {
       bg.appendChild(opt);
     });
   }
+
+  initExportOverlay();
+}
+
+async function handleExport() {
+  const status = document.getElementById('data-status');
+  try {
+    const { copied, downloaded } = await persistence.performExport();
+
+    if (copied) {
+      if (status) {
+        status.textContent = downloaded
+          ? 'Copied to clipboard and download started.'
+          : 'Copied to clipboard — paste into Lively Saved State.';
+      }
+    } else if (status) {
+      status.textContent = 'Copy the JSON below (or use the copy button).';
+    }
+  } catch {
+    if (status) status.textContent = 'Export failed — try again.';
+  }
+}
+
+function initExportOverlay() {
+  persistence.setExportFallback(showExportOverlay);
+
+  const overlay = document.getElementById('export-overlay');
+  const output = document.getElementById('export-json-output');
+  const copyBtn = document.getElementById('export-copy-btn');
+  const closeBtn = overlay?.querySelector('.export-dialog-close');
+
+  const close = () => {
+    if (!overlay) return;
+    overlay.hidden = true;
+    overlay.setAttribute('aria-hidden', 'true');
+  };
+
+  closeBtn?.addEventListener('click', close);
+  overlay?.addEventListener('click', (e) => {
+    if (e.target === overlay) close();
+  });
+
+  copyBtn?.addEventListener('click', async () => {
+    const text = output?.value || '';
+    if (!text) return;
+    const copied = await persistence.copyTextToClipboard(text);
+    const status = document.getElementById('data-status');
+    if (status) {
+      status.textContent = copied
+        ? 'Copied to clipboard.'
+        : 'Select the text, then press Ctrl+C.';
+    }
+    if (copied) close();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay && !overlay.hidden) close();
+  });
+}
+
+function showExportOverlay(json) {
+  const overlay = document.getElementById('export-overlay');
+  const output = document.getElementById('export-json-output');
+  if (!overlay || !output) return;
+  output.value = json;
+  overlay.hidden = false;
+  overlay.setAttribute('aria-hidden', 'false');
+  output.focus();
+  output.select();
 }
 
 function bind(panel, selector, key, read, write) {
