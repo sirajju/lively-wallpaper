@@ -115,12 +115,7 @@ export function initTodo() {
   }
 
   exportBtn?.addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(getTodos(), null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'todos.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
+    persistence.downloadExport('aurora-desk-state.json');
   });
 
   importBtn?.addEventListener('click', () => importFile?.click());

@@ -68,12 +68,7 @@ export function initNotes() {
   });
 
   exportBtn?.addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(getNotes(), null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'notes.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
+    persistence.downloadExport('aurora-desk-state.json');
   });
 
   importBtn?.addEventListener('click', () => importFile?.click());

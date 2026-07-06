@@ -8,7 +8,7 @@ import { getSoundOptions } from './ambient.js';
 import { setMode } from './background.js';
 import { applyTheme } from './theme.js';
 import { toggleWidgetVisibility } from './focus-mode.js';
-import { resetPositions } from './drag.js';
+import { resetPositions, applySavedPositions } from './drag.js';
 import { setIcon } from './icons.js';
 import { getSizeOptions, getCurrentSizeKey, setWidgetSize } from './widget-sizes.js';
 import {
@@ -131,7 +131,10 @@ function bindControls(panel) {
     const file = importFile.files?.[0];
     if (!file) return;
     const ok = persistence.importJSON(await readFileAsText(file));
-    if (ok) applySettings();
+    if (ok) {
+      applySettings();
+      applySavedPositions();
+    }
     importFile.value = '';
   });
 

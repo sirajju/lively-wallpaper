@@ -4,6 +4,7 @@
  */
 
 import * as persistence from './js/persistence.js';
+import { captureLiveSnapshot } from './js/state-snapshot.js';
 import { initBackground } from './js/background.js';
 import { initInteraction } from './js/interaction.js';
 import { initAmbient } from './js/ambient.js';
@@ -47,7 +48,10 @@ function safeInit(name, fn) {
 }
 
 function init() {
-  safeInit('persistence', () => persistence.initLivelyBridge());
+  safeInit('persistence', () => {
+    persistence.setSnapshotProvider(captureLiveSnapshot);
+    persistence.initLivelyBridge();
+  });
 
   const badge = document.getElementById('env-badge');
   if (badge) {

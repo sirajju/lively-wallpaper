@@ -79,6 +79,24 @@ const DEFAULT_STATE = {
   pomodoroBreak: 5,
 };
 
+/** Keys written by export metadata — not restored on import. */
+const EXPORT_META_KEYS = new Set(['exportVersion', 'exportedAt', 'app']);
+
+/** Internal / duplicate keys excluded from portable export. */
+const INTERNAL_KEYS = new Set(['savedState']);
+
+/** @type {(() => Record<string, unknown>) | null} */
+let snapshotProvider = null;
+
+/**
+ * Register a function that captures live DOM state before export.
+ * Wired from script.js to avoid circular imports with widget-sizes.
+ * @param {() => Record<string, unknown>} fn
+ */
+export function setSnapshotProvider(fn) {
+  snapshotProvider = fn;
+}
+
 /** Deep-clone default state without relying on structuredClone (older WebView hosts). */
 function cloneState(obj) {
   if (typeof structuredClone === 'function') return structuredClone(obj);
@@ -236,11 +254,40 @@ export function mergeAll(data) {
 }
 
 /**
+ * Build a complete portable state object: defaults + store + live DOM snapshot.
+ * @returns {Record<string, unknown>}
+ */
+export function buildExportState() {
+  const full = cloneState(DEFAULT_STATE);
+
+  for (const [key, value] of memoryStore) {
+    if (INTERNAL_KEYS.has(key)) continue;
+    full[key] = cloneState(value);
+  }
+
+  if (snapshotProvider) {
+    const live = snapshotProvider();
+    Object.assign(full, live);
+    Object.entries(live).forEach(([key, value]) => {
+      if (!EXPORT_META_KEYS.has(key) && !INTERNAL_KEYS.has(key)) {
+        memoryStore.set(key, cloneState(value));
+      }
+    });
+  }
+
+  full.exportVersion = 1;
+  full.exportedAt = new Date().toISOString();
+  full.app = 'aurora-desk';
+
+  return full;
+}
+
+/**
  * Export full state as JSON string.
  * @returns {string}
  */
 export function exportJSON() {
-  return JSON.stringify(getAll(), null, 2);
+  return JSON.stringify(buildExportState(), null, 2);
 }
 
 /**
@@ -251,7 +298,13 @@ export function exportJSON() {
 export function importJSON(json) {
   try {
     const data = JSON.parse(json);
-    mergeAll(data);
+    if (!data || typeof data !== 'object') return false;
+
+    const cleaned = { ...data };
+    EXPORT_META_KEYS.forEach((key) => delete cleaned[key]);
+    INTERNAL_KEYS.forEach((key) => delete cleaned[key]);
+
+    mergeAll(cleaned);
     scheduleLivelySync();
     return true;
   } catch {
@@ -383,6 +436,8 @@ export default {
   subscribe,
   getAll,
   mergeAll,
+  setSnapshotProvider,
+  buildExportState,
   exportJSON,
   importJSON,
   downloadExport,
