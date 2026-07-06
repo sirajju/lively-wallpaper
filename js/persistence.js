@@ -108,6 +108,28 @@ export function setSnapshotProvider(fn) {
   snapshotProvider = fn;
 }
 
+/** @type {boolean} Suppress listener side-effects during bulk import. */
+let isImporting = false;
+
+/**
+ * @param {unknown} a
+ * @param {unknown} b
+ * @returns {boolean}
+ */
+function valuesEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return a === b;
+  if (typeof a !== typeof b) return false;
+  if (typeof a === 'object') {
+    try {
+      return JSON.stringify(a) === JSON.stringify(b);
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
 /** Deep-clone default state without relying on structuredClone (older WebView hosts). */
 function cloneState(obj) {
   if (typeof structuredClone === 'function') return structuredClone(obj);
@@ -218,7 +240,15 @@ export function get(key, fallback) {
  * @param {unknown} value
  */
 export function set(key, value) {
+  const prev = memoryStore.get(key);
+  if (valuesEqual(prev, value)) return;
+
   memoryStore.set(key, value);
+  if (isImporting) {
+    scheduleStorageSave();
+    return;
+  }
+
   listeners.forEach((fn) => {
     try {
       fn(key, value);
@@ -260,6 +290,12 @@ export function mergeAll(data, options = {}) {
       keys.push(key);
     }
   });
+
+  if (options.silent || isImporting) {
+    scheduleStorageSave();
+    return;
+  }
+
   if (options.notifyEachKey) {
     keys.forEach((key) => {
       listeners.forEach((fn) => {
@@ -338,10 +374,25 @@ export function importJSON(json) {
     EXPORT_META_KEYS.forEach((key) => delete cleaned[key]);
     INTERNAL_KEYS.forEach((key) => delete cleaned[key]);
 
-    mergeAll(cleaned, { notifyEachKey: true });
+    isImporting = true;
+    try {
+      mergeAll(cleaned, { silent: true });
+    } finally {
+      isImporting = false;
+    }
+
+    listeners.forEach((fn) => {
+      try {
+        fn('*', getAll());
+      } catch {
+        /* noop */
+      }
+    });
+    scheduleStorageSave();
     scheduleLivelySync();
     return true;
   } catch {
+    isImporting = false;
     return false;
   }
 }

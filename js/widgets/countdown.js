@@ -62,7 +62,7 @@ export function initCountdown() {
   });
 
   persistence.subscribe((key) => {
-    if (key === 'countdowns') render();
+    if (key === 'countdowns' || key === '*') render();
   });
 
   render();

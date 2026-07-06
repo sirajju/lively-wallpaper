@@ -9,11 +9,53 @@ const PRIORITY_OPTIONS = [
   { value: 'high', label: 'High', color: '#f43f5e' },
 ];
 
+/** @type {Set<{ wrap: HTMLElement, popover: HTMLElement, close: () => void, positionPopover: () => void }>} */
+const openInstances = new Set();
+
+let documentBound = false;
+
+function ensureDocumentListeners() {
+  if (documentBound) return;
+  documentBound = true;
+
+  document.addEventListener('mousedown', (e) => {
+    const target = /** @type {Node} */ (e.target);
+    for (const inst of openInstances) {
+      if (inst.popover.hidden) continue;
+      if (inst.wrap.contains(target) || inst.popover.contains(target)) continue;
+      inst.close();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    for (const inst of openInstances) {
+      if (!inst.popover.hidden) inst.positionPopover();
+    }
+  });
+}
+
+function pruneOrphanPopovers() {
+  document.querySelectorAll('.custom-select-popover[data-select-id]').forEach((pop) => {
+    const id = pop.getAttribute('data-select-id');
+    if (!id || !document.getElementById(id)) pop.remove();
+  });
+}
+
+function closeOtherSelects(currentPopover) {
+  for (const inst of openInstances) {
+    if (inst.popover !== currentPopover && !inst.popover.hidden) inst.close();
+  }
+}
+
 /**
  * @param {HTMLSelectElement} select
  */
 export function enhanceSelect(select) {
   if (!select || select.dataset.enhanced) return;
+  pruneOrphanPopovers();
+  ensureDocumentListeners();
+
+  if (!select.id) select.id = `aurora-select-${crypto.randomUUID()}`;
   select.dataset.enhanced = 'true';
   select.classList.add('native-select-hidden');
   select.tabIndex = -1;
@@ -32,10 +74,20 @@ export function enhanceSelect(select) {
   const popover = document.createElement('div');
   popover.className = 'custom-select-popover';
   popover.setAttribute('role', 'listbox');
+  popover.setAttribute('data-select-id', select.id);
   popover.hidden = true;
   document.body.appendChild(popover);
 
   let ignoreOutsideClose = false;
+
+  /** @type {{ wrap: HTMLElement, popover: HTMLElement, close: () => void, positionPopover: () => void }} */
+  const instance = {
+    wrap,
+    popover,
+    close: () => {},
+    positionPopover: () => {},
+  };
+  openInstances.add(instance);
 
   function getOptions() {
     return Array.from(select.options)
@@ -98,7 +150,10 @@ export function enhanceSelect(select) {
     }
   }
 
+  instance.positionPopover = positionPopover;
+
   function open() {
+    closeOtherSelects(popover);
     renderPopover();
     popover.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
@@ -112,12 +167,7 @@ export function enhanceSelect(select) {
     wrap.classList.remove('is-open');
   }
 
-  function onDocumentPointer(e) {
-    if (ignoreOutsideClose) return;
-    const target = /** @type {Node} */ (e.target);
-    if (wrap.contains(target) || popover.contains(target)) return;
-    close();
-  }
+  instance.close = close;
 
   btn.addEventListener('mousedown', (e) => {
     e.preventDefault();
@@ -138,14 +188,19 @@ export function enhanceSelect(select) {
     }
   });
 
-  document.addEventListener('mousedown', onDocumentPointer);
-  window.addEventListener('resize', () => {
-    if (!popover.hidden) positionPopover();
-  });
-
   wrap.append(btn);
   renderTrigger();
+  select.addEventListener('aurora-select-sync', renderTrigger);
   select.addEventListener('change', renderTrigger);
+}
+
+/**
+ * Refresh a custom select trigger without firing native change handlers.
+ * @param {HTMLSelectElement} select
+ */
+export function syncSelectDisplay(select) {
+  if (!select?.dataset.enhanced) return;
+  select.dispatchEvent(new CustomEvent('aurora-select-sync', { bubbles: false }));
 }
 
 /**
@@ -153,6 +208,7 @@ export function enhanceSelect(select) {
  * @param {ParentNode} [root]
  */
 export function enhanceSelectsIn(root = document) {
+  pruneOrphanPopovers();
   root.querySelectorAll('select:not([data-enhanced])').forEach((sel) => {
     if (sel instanceof HTMLSelectElement) enhanceSelect(sel);
   });
@@ -166,4 +222,4 @@ export function initCustomSelects() {
   });
 }
 
-export default { enhanceSelect, enhanceSelectsIn, initCustomSelects };
+export default { enhanceSelect, enhanceSelectsIn, syncSelectDisplay, initCustomSelects };

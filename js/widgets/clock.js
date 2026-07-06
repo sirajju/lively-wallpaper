@@ -102,7 +102,7 @@ export function initClock() {
   }
 
   persistence.subscribe((key) => {
-    if (key === 'timeFormat24') {
+    if (key === 'timeFormat24' || key === '*') {
       prevHM = '';
       prevSec = '';
       tick();

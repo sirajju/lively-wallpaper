@@ -77,7 +77,7 @@ export function initGitHub() {
   });
 
   persistence.subscribe((key) => {
-    if (key === 'githubUsername') {
+    if (key === 'githubUsername' || key === '*') {
       const name = String(persistence.get('githubUsername', ''));
       if (userInput) userInput.value = name;
       if (name) load(name);

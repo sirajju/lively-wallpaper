@@ -8,10 +8,10 @@ import { getSoundOptions } from './ambient.js';
 import { setMode } from './background.js';
 import { applyTheme } from './theme.js';
 import { toggleWidgetVisibility } from './focus-mode.js';
-import { resetPositions, applySavedPositions } from './drag.js';
+import { resetPositions } from './drag.js';
 import { setIcon } from './icons.js';
 import { getSizeOptions, getCurrentSizeKey, setWidgetSize } from './widget-sizes.js';
-import { enhanceSelectsIn } from './custom-select.js';
+import { enhanceSelectsIn, syncSelectDisplay } from './custom-select.js';
 import {
   hasWidgetSettings,
   renderWidgetSettings,
@@ -36,6 +36,21 @@ const WIDGETS = [
 ];
 
 const WIDGETS_PER_PAGE = 9;
+
+const SETTINGS_UI_KEYS = new Set([
+  'accentColor',
+  'glassOpacity',
+  'blurAmount',
+  'widgetScale',
+  'animationSpeed',
+  'timeFormat24',
+  'focusMode',
+  'weatherUnits',
+  'fontFamily',
+  'backgroundMode',
+  'ambientSound',
+  'ambientVolume',
+]);
 
 /** @type {number} */
 let widgetPage = 0;
@@ -80,7 +95,7 @@ export function initSettings() {
   buildWidgetCards(panel);
 
   persistence.subscribe((key) => {
-    applySettings();
+    if (key === '*' || SETTINGS_UI_KEYS.has(key)) applySettings();
     if (key === 'widgetSpans' || key === 'hiddenWidgets' || key === '*') {
       buildWidgetCards(panel);
     }
@@ -185,8 +200,6 @@ function bindControls(panel) {
         if (status) status.textContent = 'Import failed — choose a valid Aurora Desk JSON file.';
         return;
       }
-      applySettings();
-      applySavedPositions();
       if (status) {
         status.textContent = 'Import applied successfully.';
         window.setTimeout(() => {
@@ -331,12 +344,14 @@ function applySettings() {
 
 function setVal(root, sel, val) {
   const el = root?.querySelector(sel);
-  if (el && 'value' in el) {
-    el.value = String(val);
-    if (el instanceof HTMLSelectElement) {
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    }
+  if (!el || !('value' in el)) return;
+  const next = String(val);
+  if (el.value === next) {
+    if (el instanceof HTMLSelectElement) syncSelectDisplay(el);
+    return;
   }
+  el.value = next;
+  if (el instanceof HTMLSelectElement) syncSelectDisplay(el);
 }
 
 function setCheck(root, sel, val) {

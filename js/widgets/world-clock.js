@@ -76,7 +76,7 @@ export function initWorldClock() {
   });
 
   persistence.subscribe((key) => {
-    if (key === 'worldClocks' || key === 'timeFormat24') render();
+    if (key === 'worldClocks' || key === 'timeFormat24' || key === '*') render();
   });
 
   render();

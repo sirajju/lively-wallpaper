@@ -136,7 +136,7 @@ export function initTodo() {
   });
 
   persistence.subscribe((key) => {
-    if (key === 'todos') render();
+    if (key === 'todos' || key === '*') render();
   });
 
   render();

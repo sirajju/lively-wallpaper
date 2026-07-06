@@ -68,7 +68,7 @@ export function initEvents() {
   });
 
   persistence.subscribe((key) => {
-    if (key === 'events') render();
+    if (key === 'events' || key === '*') render();
   });
 
   render();

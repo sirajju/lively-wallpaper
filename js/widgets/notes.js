@@ -88,7 +88,7 @@ export function initNotes() {
   });
 
   persistence.subscribe((key) => {
-    if (key === 'notes') render();
+    if (key === 'notes' || key === '*') render();
   });
 
   render();
