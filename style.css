@@ -1317,6 +1317,7 @@ body.focus-mode .widget[data-widget="todo"] {
 .custom-select-popover {
   background: var(--glass-bg-strong);
   backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
   border: 1px solid var(--glass-border);
   border-radius: 10px;
   padding: 4px;
@@ -1557,6 +1558,48 @@ body.focus-mode .widget[data-widget="todo"] {
 .settings-field select {
   width: 100%;
   min-width: 0;
+}
+
+.settings-field .custom-select {
+  width: 100%;
+  min-width: 0;
+}
+
+.settings-field .custom-select-trigger {
+  width: 100%;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.settings-field .custom-select-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.widget-cell .custom-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.widget-cell .custom-select-trigger {
+  width: 100%;
+  font-size: 0.68rem;
+  padding: 3px 6px;
+  min-height: 26px;
+  box-sizing: border-box;
+}
+
+.widget-popover-body .custom-select {
+  width: 100%;
+}
+
+.widget-popover-body .custom-select-trigger {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .settings-field--color {

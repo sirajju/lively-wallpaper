@@ -11,6 +11,7 @@ import { toggleWidgetVisibility } from './focus-mode.js';
 import { resetPositions, applySavedPositions } from './drag.js';
 import { setIcon } from './icons.js';
 import { getSizeOptions, getCurrentSizeKey, setWidgetSize } from './widget-sizes.js';
+import { enhanceSelectsIn } from './custom-select.js';
 import {
   hasWidgetSettings,
   renderWidgetSettings,
@@ -218,6 +219,7 @@ function bindControls(panel) {
   }
 
   initExportOverlay();
+  enhanceSelectsIn(panel);
 }
 
 async function handleExport() {
@@ -329,7 +331,12 @@ function applySettings() {
 
 function setVal(root, sel, val) {
   const el = root?.querySelector(sel);
-  if (el && 'value' in el) el.value = String(val);
+  if (el && 'value' in el) {
+    el.value = String(val);
+    if (el instanceof HTMLSelectElement) {
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
 }
 
 function setCheck(root, sel, val) {
@@ -439,6 +446,8 @@ function buildWidgetCards(panel) {
       if (widgetId) openWidgetPopover(widgetId);
     });
   });
+
+  enhanceSelectsIn(container);
 }
 
 /** Lazily create the floating per-widget settings popover. */

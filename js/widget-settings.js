@@ -4,6 +4,7 @@
 
 import * as persistence from './persistence.js';
 import { CITY_LABELS } from './widgets/world-clock.js';
+import { enhanceSelectsIn } from './custom-select.js';
 
 /** @typedef {(container: HTMLElement) => void} SettingsRenderer */
 
@@ -56,6 +57,7 @@ export function renderWidgetSettings(id, container) {
   container.innerHTML = '';
   const fn = RENDERERS[id];
   if (fn) fn(container);
+  enhanceSelectsIn(container);
 }
 
 function field(label, input) {
