@@ -15,8 +15,8 @@ const STORAGE_KEY = 'auroraDeskState';
 const DEFAULT_STATE = {
   accentColor: '#8B5CF6',
   backgroundMode: 'aurora',
-  glassOpacity: 0.72,
-  blurAmount: 20,
+  glassOpacity: 0.34,
+  blurAmount: 24,
   widgetScale: 1,
   animationSpeed: 1,
   focusMode: false,
@@ -41,8 +41,25 @@ const DEFAULT_STATE = {
     'motivation',
   ],
   widgetPositions: {},
-  widgetDocks: {},
-  widgetSpans: {},
+  // Clean, non-overlapping default layout on the 12×8 grid:
+  //   Row band 0–1: Clock · Greeting · Weather  (each 4 wide × 2 tall)
+  //   Row band 2–5: Calendar · Pomodoro · Todo  (each 4 wide × 4 tall)
+  widgetDocks: {
+    clock: { col: 0, row: 0 },
+    greeting: { col: 4, row: 0 },
+    weather: { col: 8, row: 0 },
+    calendar: { col: 0, row: 2 },
+    pomodoro: { col: 4, row: 2 },
+    todo: { col: 8, row: 2 },
+  },
+  widgetSpans: {
+    clock: { cols: 4, rows: 2 },
+    greeting: { cols: 4, rows: 2 },
+    weather: { cols: 4, rows: 2 },
+    calendar: { cols: 4, rows: 4 },
+    pomodoro: { cols: 4, rows: 4 },
+    todo: { cols: 4, rows: 4 },
+  },
   todos: [],
   notes: [],
   countdowns: [],

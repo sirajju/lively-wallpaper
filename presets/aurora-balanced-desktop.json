@@ -1,8 +1,8 @@
 {
   "accentColor": "#8B5CF6",
   "backgroundMode": "aurora",
-  "glassOpacity": 0.72,
-  "blurAmount": 20,
+  "glassOpacity": 0.34,
+  "blurAmount": 24,
   "widgetScale": 1,
   "animationSpeed": 1,
   "focusMode": false,
@@ -15,165 +15,51 @@
     "stopwatch",
     "countdown",
     "notes",
+    "spotify",
+    "github",
     "system",
     "worldclock",
     "events",
     "radar",
-    "motivation",
-    "calendar"
+    "rss",
+    "motivation"
   ],
   "widgetPositions": {},
   "widgetDocks": {
-    "clock": {
-      "col": 0,
-      "row": 0
-    },
-    "greeting": {
-      "col": 9,
-      "row": 0
-    },
-    "weather": {
-      "col": 8,
-      "row": 2
-    },
-    "calendar": {
-      "col": 0,
-      "row": 2
-    },
-    "pomodoro": {
-      "col": 0,
-      "row": 2
-    },
-    "todo": {
-      "col": 10,
-      "row": 2
-    },
-    "system": {
-      "col": 0,
-      "row": 5
-    },
-    "worldclock": {
-      "col": 3,
-      "row": 5
-    },
-    "radar": {
-      "col": 6,
-      "row": 5
-    },
-    "spotify": {
-      "col": 8,
-      "row": 4
-    },
-    "rss": {
-      "col": 8,
-      "row": 6
-    },
-    "motivation": {
-      "col": 9,
-      "row": 0
-    },
-    "notes": {
-      "col": 0,
-      "row": 5
-    },
-    "events": {
-      "col": 4,
-      "row": 5
-    },
-    "github": {
-      "col": 2,
-      "row": 0
-    },
-    "stopwatch": {
-      "col": 0,
-      "row": 6
-    },
-    "countdown": {
-      "col": 2,
-      "row": 6
-    }
+    "clock": { "col": 0, "row": 0 },
+    "greeting": { "col": 4, "row": 0 },
+    "weather": { "col": 8, "row": 0 },
+    "calendar": { "col": 0, "row": 2 },
+    "pomodoro": { "col": 4, "row": 2 },
+    "todo": { "col": 8, "row": 2 }
   },
   "widgetSpans": {
-    "clock": {
-      "cols": 2,
-      "rows": 2
-    },
-    "greeting": {
-      "cols": 3,
-      "rows": 2
-    },
-    "weather": {
-      "cols": 2,
-      "rows": 2
-    },
-    "calendar": {
-      "cols": 4,
-      "rows": 3
-    },
-    "pomodoro": {
-      "cols": 2,
-      "rows": 3
-    },
-    "todo": {
-      "cols": 2,
-      "rows": 2
-    },
-    "system": {
-      "cols": 3,
-      "rows": 2
-    },
-    "worldclock": {
-      "cols": 3,
-      "rows": 2
-    },
-    "radar": {
-      "cols": 3,
-      "rows": 2
-    },
-    "spotify": {
-      "cols": 4,
-      "rows": 2
-    },
-    "rss": {
-      "cols": 4,
-      "rows": 2
-    },
-    "motivation": {
-      "cols": 3,
-      "rows": 2
-    },
-    "notes": {
-      "cols": 4,
-      "rows": 3
-    },
-    "events": {
-      "cols": 4,
-      "rows": 3
-    },
-    "github": {
-      "cols": 2,
-      "rows": 2
-    },
-    "stopwatch": {
-      "cols": 2,
-      "rows": 2
-    },
-    "countdown": {
-      "cols": 3,
-      "rows": 2
-    }
+    "clock": { "cols": 4, "rows": 2 },
+    "greeting": { "cols": 4, "rows": 2 },
+    "weather": { "cols": 4, "rows": 2 },
+    "calendar": { "cols": 4, "rows": 4 },
+    "pomodoro": { "cols": 4, "rows": 4 },
+    "todo": { "cols": 4, "rows": 4 }
   },
   "todos": [],
   "notes": [],
   "countdowns": [],
   "events": [],
   "worldClocks": [
-    "America/New_York",
+    "Asia/Kolkata",
     "Europe/London",
-    "Asia/Tokyo"
+    "America/New_York"
   ],
-  "githubUsername": "sirajju",
+  "githubUsername": "",
   "weatherCoords": null,
+  "rssFeeds": [
+    { "name": "Hacker News", "url": "https://hnrss.org/frontpage" },
+    { "name": "Dev.to", "url": "https://dev.to/feed" },
+    { "name": "CSS-Tricks", "url": "https://css-tricks.com/feed/" }
+  ],
+  "rssDisplayMode": "list",
+  "rssMaxItems": 5,
+  "rssRotateSeconds": 12,
   "pomodoroWork": 25,
   "pomodoroBreak": 5
 }

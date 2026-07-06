@@ -35,26 +35,26 @@ const DRAG_THRESHOLD = 4;
  * Middle band = MD widgets (4 wide × 3 tall).
  */
 const DEFAULT_DOCKS = {
-  // Row 0-1: small info widgets across the top
+  // Row 0-1: info band across the top (each 4 wide × 2 tall)
   clock: [0, 0],
-  greeting: [3, 0],
-  weather: [6, 0],
-  system: [9, 0],
-  // Row 2-4: medium interactive widgets
+  greeting: [4, 0],
+  weather: [8, 0],
+  // Row 2-5: content band (each 4 wide × 4 tall)
   calendar: [0, 2],
   pomodoro: [4, 2],
   todo: [8, 2],
-  events: [0, 5],
-  notes: [4, 5],
-  radar: [8, 5],
-  countdown: [9, 0],
-  spotify: [9, 2],
-  // Others (mostly hidden by default) — placed lower, auto-adjusted if needed
-  stopwatch: [0, 5],
-  worldclock: [3, 0],
-  rss: [6, 0],
-  motivation: [0, 7],
-  github: [8, 4],
+  // Others (hidden by default) — placed lower, auto-adjusted if enabled.
+  system: [0, 6],
+  events: [4, 6],
+  notes: [8, 6],
+  radar: [0, 6],
+  countdown: [4, 6],
+  spotify: [8, 6],
+  stopwatch: [0, 6],
+  worldclock: [4, 6],
+  rss: [8, 6],
+  motivation: [0, 6],
+  github: [8, 6],
 };
 
 let active = null;
@@ -148,6 +148,7 @@ function placeInCell(el, col, row, m) {
   el.style.width = `${box.width}px`;
   el.style.height = `${box.height}px`;
   el.style.minWidth = '0';
+  el.style.maxWidth = 'none';
   el.style.maxHeight = 'none';
   el.style.right = 'auto';
   el.style.bottom = 'auto';
@@ -355,6 +356,7 @@ function onMouseMove(e) {
   active.style.width = `${spanC * m.colW + (spanC - 1) * GAP}px`;
   active.style.height = `${spanR * m.rowH + (spanR - 1) * GAP}px`;
   active.style.minWidth = '0';
+  active.style.maxWidth = 'none';
   active.style.maxHeight = 'none';
   active.style.right = 'auto';
   active.style.bottom = 'auto';
@@ -517,6 +519,7 @@ export function resetPositions() {
     el.style.width = '';
     el.style.height = '';
     el.style.minWidth = '';
+    el.style.maxWidth = '';
     el.style.maxHeight = '';
     el.style.zIndex = '';
     delete el.dataset.col;
