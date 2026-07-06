@@ -260,8 +260,6 @@ body.focus-mode .widget[data-widget="todo"] {
     border-color var(--transition);
   max-height: calc(100vh - 80px);
   overflow: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent-soft) transparent;
   animation: widget-breathe 6s ease-in-out infinite;
 }
 
@@ -1807,8 +1805,16 @@ body[data-bg-mode="cyberpunk"] .clock-hm {
   outline-offset: 2px;
 }
 
-.widget::-webkit-scrollbar { width: 4px; }
-.widget::-webkit-scrollbar-thumb {
-  background: var(--accent-soft);
-  border-radius: 4px;
+/* Hidden scrollbars — scrolling still works via wheel/touch/drag */
+.widget,
+.widget * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.widget::-webkit-scrollbar,
+.widget *::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
